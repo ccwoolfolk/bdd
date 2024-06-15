@@ -1,6 +1,7 @@
+from commands import cli
+
 def main():
-    # TODO
-    print("in main...")
+    pass
 
 if __name__ == '__main__':
-    main()
+    cli()

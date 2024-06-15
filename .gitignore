@@ -1,1 +1,3 @@
 bdd-venv/
+bdd.egg-info/
+**/__pycache__/**

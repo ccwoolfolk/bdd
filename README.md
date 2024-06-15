@@ -9,20 +9,28 @@
 `python3 -m pip install -r requirements.txt`
 
 ### Add a dependency
+
 ```
 python3 -m pip install [package]
 python3 -m pip freeze > requirements.txt
 ```
 
+### Manual testing
+
+```
+python3 -m pip install --editable .
+bdd --help
+```
+
 ## Roadmap
 
 - bdd init
-- creates env
-- prompt for options
-  - editor
-  - open editor?
-  - save options
-  - notify about jwt
+  - creates env
+  - prompt for options
+    - editor
+    - open editor?
+    - save options
+    - notify about jwt
 - bdd auth [jwt]
   - validate
   - save

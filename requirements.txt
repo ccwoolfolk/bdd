@@ -1,6 +1,15 @@
+-e git+ssh://git@github.com/ccwoolfolk/bdd.git@67bd297312a72e62c6cdc233c9360e22a66d2cac#egg=bdd
+black==24.4.2
 certifi==2024.6.2
 charset-normalizer==3.3.2
 click==8.1.7
 idna==3.7
+mypy-extensions==1.0.0
+packaging==24.1
+pathspec==0.12.1
+platformdirs==4.2.2
+PyYAML==6.0.1
 requests==2.32.3
+tomli==2.0.1
+typing_extensions==4.12.2
 urllib3==2.2.1
