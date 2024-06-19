@@ -1,8 +1,28 @@
 # bdd
 
+## Prereqs
+
+This tool relies on the [Boot.dev CLI](https://github.com/bootdotdev/bootdev/tree/main) to simplify initial authentication. Install the tool and run `bootdev login` before attempting to use `bdd`.
+
+Python `3.10` or greater is recommended.
+
+## Usage
+
+Run `bdd init` to set up your configuration.
+
+`bdd get [Boot.dev lesson URL]` will retrieve the lesson files and open them with the editor stored in your configuration.
+
 ## Development
 
-`source bdd-venv/bin/activate`
+### Virtual environment
+
+Create your virtual environment. I recommend `venv` which is part of the standard library as of `3.3`.
+
+```bash
+python3 -m venv .venv
+```
+
+and activate it with `source .venv/bin/activate`.
 
 ### Install dependencies
 
@@ -10,14 +30,14 @@
 
 ### Add a dependency
 
-```
+```bash
 python3 -m pip install [package]
 python3 -m pip freeze > requirements.txt
 ```
 
 ### Manual testing
 
-```
+```bash
 python3 -m pip install --editable .
 bdd --help
 ```
@@ -25,21 +45,8 @@ bdd --help
 ## Roadmap
 
 - bdd init
-  - creates env
   - prompt for options
-    - editor
     - open editor?
-    - save options
-    - notify about jwt
-- bdd auth [jwt]
-  - validate
-  - save
-- bdd get [url]
-  - if exists, prompt for confirmation
-  - download files
-  - if auth error, notify
-  - if open editor option, open
-  - set most recent
 - bdd run [optional uuid]
   - run the most recent if no uuid
   - notify on error
