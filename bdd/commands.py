@@ -14,7 +14,7 @@ def cli():
 @cli.command(name="init")
 def bdd_init():
     # TODO: If the user has a config, prompt for confirmation
-    # TODO: display a welcome message
+    click.echo("Welcome to the bdd initialization process. Let's get you started.")
 
     # Get the boot.dev CLI path
     boot_dev_cli_config_path: str | None = None
@@ -44,6 +44,7 @@ def bdd_init():
     click.echo(
         f"Congrats, you're all set up. You can edit your config at {bddio.CONFIG_PATH}."
     )
+    click.echo('Try "bdd get --help" to start completing lessons locally.')
 
 
 @cli.command(name="get")
