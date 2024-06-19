@@ -1,7 +1,12 @@
 import requests
 import time
 
-from bdd import bddio
+from bddconfig import (
+    BddConfig,
+    upsert_bootdev_cli_config,
+    BootdevCliConfigError,
+    load_bootdev_cli_config,
+)
 
 base_url = "https://api.boot.dev/v1/lessons"
 
@@ -18,26 +23,26 @@ def should_refresh_token(last_refresh: int) -> bool:
 
 def require_auth(unauthd_func):
     def authd_func(*args, **kwargs):
-        bootdev_cli_config = bddio.load_bootdev_cli_config()
+        bootdev_cli_config = load_bootdev_cli_config()
 
         # If no or invalid tokens, raise
         try:
             access_token = bootdev_cli_config["access_token"]
         except KeyError:
-            raise bddio.BootdevCliConfigError("Access token not found")
+            raise BootdevCliConfigError("Access token not found")
 
         if access_token == "":
             # TODO: actually validate the format of the jwt
-            raise bddio.BootdevCliConfigError("Invalid access token")
+            raise BootdevCliConfigError("Invalid access token")
 
         try:
             refresh_token = bootdev_cli_config["refresh_token"]
         except KeyError:
-            raise bddio.BootdevCliConfigError("Refresh token not found")
+            raise BootdevCliConfigError("Refresh token not found")
 
         if refresh_token == "":
             # This isnt' a great validation, but it's something
-            raise bddio.BootdevCliConfigError("Invalid refresh token")
+            raise BootdevCliConfigError("Invalid refresh token")
 
         # If refresh token is expired, refresh
         last_refresh = bootdev_cli_config.get("last_refresh", 0)
@@ -55,7 +60,7 @@ def require_auth(unauthd_func):
                 "access_token": refreshed["access_token"],
             }
 
-            bddio.upsert_bootdev_cli_config(new_config)
+            upsert_bootdev_cli_config(new_config)
 
             refresh_token = new_config["refresh_token"]
             access_token = new_config["access_token"]

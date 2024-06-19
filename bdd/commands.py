@@ -1,9 +1,10 @@
 import click
 import os
 
-from bdd import bddio
+from bddio import load_yaml, to_bdd_path
 from bdd import client
-from bdd.lesson import Lesson, LessonParsingError
+from lesson import Lesson, LessonParsingError
+from bddconfig import BddConfig
 
 
 @click.group()
@@ -15,34 +16,34 @@ def cli():
 def bdd_init():
     # TODO: If the user has a config, prompt for confirmation
     click.echo("Welcome to the bdd initialization process. Let's get you started.")
+    bdd_config = BddConfig(use_defaults=True)
 
     # Get the boot.dev CLI path
-    boot_dev_cli_config_path: str | None = None
+    unverified_path: str | None = None
+    while unverified_path is None:
+        unverified_path = click.prompt(
+            bdd_config.boot_dev_cli_config_path.description,
+            bdd_config.boot_dev_cli_config_path.default,
+        )
 
-    while boot_dev_cli_config_path is None:
         try:
-            unverified_path = click.prompt(
-                "Path to boot.dev configuration", "~/.bootdev.yaml"
-            )
-            bddio.load_yaml(os.path.expandvars(unverified_path))
-            boot_dev_cli_config_path = unverified_path
-            click.echo("...path verified")
+            load_yaml(os.path.expandvars(str(unverified_path)))
         except FileNotFoundError:
             click.echo("Invalid path")
+            unverified_path = None
+
+        bdd_config.boot_dev_cli_config_path.value = str(unverified_path)
+        click.echo("...path verified")
 
     # Get the editor command
-    editor_command = click.prompt("Editor command", "nvim -p")
+    bdd_config.editor_command.value = click.prompt(
+        bdd_config.editor_command.description, bdd_config.editor_command.default
+    )
 
-    # Save the config
-    # TODO: keys shouldn't be strewn here
-    new_config = {
-        "boot_dev_cli_config_path": boot_dev_cli_config_path,
-        "editor_command": editor_command,
-    }
-
-    bddio.write_config(new_config)
+    # Wrap up
+    bdd_config.save()
     click.echo(
-        f"Congrats, you're all set up. You can edit your config at {bddio.CONFIG_PATH}."
+        f"Congrats, you're all set up. You can edit your config at {to_bdd_path(BddConfig.CONFIG_FILENAME)}."
     )
     click.echo('Try "bdd get --help" to start completing lessons locally.')
 
@@ -69,8 +70,7 @@ def bdd_get(url: str):
     lesson.save()
     click.echo("...lesson retrieved and saved!")
 
-    # TODO: move this
-    editor_command = bddio.load_config()["editor_command"]
+    editor_command = BddConfig().editor_command.value
     lesson_paths = " ".join(str(p) for p in lesson.file_paths)
     os.system(f"{editor_command} {lesson_paths}")
 
