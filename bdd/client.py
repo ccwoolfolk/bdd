@@ -1,12 +1,8 @@
 import requests
 import time
 
-from bddconfig import (
-    BddConfig,
-    upsert_bootdev_cli_config,
-    BootdevCliConfigError,
-    load_bootdev_cli_config,
-)
+from bddconfig import BddConfig
+from bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
 
 base_url = "https://api.boot.dev/v1/lessons"
 
@@ -23,51 +19,26 @@ def should_refresh_token(last_refresh: int) -> bool:
 
 def require_auth(unauthd_func):
     def authd_func(*args, **kwargs):
-        bootdev_cli_config = load_bootdev_cli_config()
+        path = BddConfig().expanded_bootdev_cli_config_path
+        bootdev_cli_config = BootdevCliConfig(path)
 
-        # If no or invalid tokens, raise
-        try:
-            access_token = bootdev_cli_config["access_token"]
-        except KeyError:
-            raise BootdevCliConfigError("Access token not found")
-
-        if access_token == "":
-            # TODO: actually validate the format of the jwt
-            raise BootdevCliConfigError("Invalid access token")
-
-        try:
-            refresh_token = bootdev_cli_config["refresh_token"]
-        except KeyError:
-            raise BootdevCliConfigError("Refresh token not found")
-
-        if refresh_token == "":
-            # This isnt' a great validation, but it's something
-            raise BootdevCliConfigError("Invalid refresh token")
-
-        # If refresh token is expired, refresh
-        last_refresh = bootdev_cli_config.get("last_refresh", 0)
+        access_token = bootdev_cli_config.access_token
+        refresh_token = bootdev_cli_config.refresh_token
+        last_refresh = bootdev_cli_config.last_refresh
 
         if should_refresh_token(last_refresh):
-            # TODO: config form should be validated somewhere
-            api_url = bootdev_cli_config["api_url"]
+            api_url = bootdev_cli_config.api_url
 
             refreshed = fetch_refreshed_token(
                 api_url=api_url, refresh_token=refresh_token
             )
-            new_config = {
-                "last_refresh": int(time.time()),
-                "refresh_token": refreshed["refresh_token"],
-                "access_token": refreshed["access_token"],
-            }
 
-            upsert_bootdev_cli_config(new_config)
+            bootdev_cli_config.last_refresh = int(time.time())
+            bootdev_cli_config.refresh_token = refreshed["refresh_token"]
+            bootdev_cli_config.access_token = refreshed["access_token"]
+            bootdev_cli_config.save()
 
-            refresh_token = new_config["refresh_token"]
-            access_token = new_config["access_token"]
-            last_refresh = new_config["last_refresh"]
-
-        # Else pass the token
-        return unauthd_func(*args, **kwargs, token=access_token)
+        return unauthd_func(*args, **kwargs, token=bootdev_cli_config.access_token)
 
     return authd_func
 

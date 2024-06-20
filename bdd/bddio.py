@@ -53,3 +53,7 @@ def load_json(path: str) -> dict[str, str]:
 def load_yaml(path: str) -> dict[str, Any]:
     with open(path) as f:
         return yaml.safe_load(f)
+
+def write_yaml(contents: dict, path: str):
+    with open(path, "w") as f:
+        yaml.dump(contents, f)
