@@ -1,6 +1,6 @@
 from typing import Any
 
-from bddio import load_yaml, write_yaml
+from .bddio import load_yaml, write_yaml
 
 
 # We only expose the necessary fields here

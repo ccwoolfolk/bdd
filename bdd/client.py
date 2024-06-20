@@ -1,8 +1,8 @@
 import requests
 import time
 
-from bddconfig import BddConfig
-from bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
+from .bddconfig import BddConfig
+from .bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
 
 LESSON_PATH = "/v1/lessons"
 REFRESH_PATH = "/v1/auth/refresh"

@@ -1,10 +1,10 @@
 import click
 import os
 
-from bddio import load_yaml, to_bdd_path
 from bdd import client
-from lesson import Lesson, LessonParsingError
-from bddconfig import BddConfig
+from .bddio import load_yaml, to_bdd_path
+from .lesson import Lesson, LessonParsingError
+from .bddconfig import BddConfig
 
 
 @click.group()

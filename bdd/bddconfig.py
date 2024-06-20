@@ -2,7 +2,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-from bddio import read_data, write_data
+from .bddio import read_data, write_data
 
 
 @dataclass

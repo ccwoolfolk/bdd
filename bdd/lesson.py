@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from bdd.bddio import to_bdd_path, write_data
+from .bddio import to_bdd_path, write_data
 
 LESSON_BASE_PATH = "lessons"
 
