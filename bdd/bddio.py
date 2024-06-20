@@ -32,9 +32,9 @@ def read_data(local_path: str) -> dict[str, Any]:
     path = Path(to_bdd_path(local_path))
 
     match path.suffix:
-        case 'json':
+        case '.json':
             return load_json(str(path))
-        case 'yaml':
+        case '.yaml':
             return load_yaml(str(path))
         case _:
             raise ValueError()
