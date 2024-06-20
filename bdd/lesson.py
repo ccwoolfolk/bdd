@@ -6,6 +6,12 @@ from .bddio import to_bdd_path, write_data
 
 LESSON_BASE_PATH = "lessons"
 
+class LessonType:
+    CODE_TESTS = 'type_code_tests'
+    CLI_COMMAND = 'type_cli_command'
+
+SUPPORTED_LESSON_TYPES = {LessonType.CODE_TESTS}
+
 
 class LessonParsingError(Exception):
     pass
@@ -20,6 +26,10 @@ class Lesson:
     prog_lang: str
     readme: str
     files: dict[str, str]
+
+    @property
+    def is_supported_lesson_type(self) -> bool:
+        return self.lesson_type in SUPPORTED_LESSON_TYPES
 
     @property
     def lesson_dir(self) -> Path:
@@ -37,20 +47,41 @@ class Lesson:
             raise LessonParsingError("Unrecognized api payload. Cannot parse.")
         try:
             l = payload["Lesson"]
-            file_content = l["LessonDataCodeTests"]
-            starter_files = {
-                f["Name"]: f["Content"] for f in file_content["StarterFiles"]
-            }
+            course_uuid=l["CourseUUID"]
+            chapter_uuid=l["ChapterUUID"]
+            uuid=l["UUID"]
+            lesson_type = l["Type"]
 
-            return Lesson(
-                course_uuid=l["CourseUUID"],
-                chapter_uuid=l["ChapterUUID"],
-                uuid=l["UUID"],
-                lesson_type=l["Type"],
-                prog_lang=file_content["ProgLang"],
-                readme=file_content["Readme"],
-                files=starter_files,
-            )
+            match lesson_type:
+                case LessonType.CODE_TESTS:
+                    file_content = l["LessonDataCodeTests"]
+                    starter_files = {
+                        f["Name"]: f["Content"] for f in file_content["StarterFiles"]
+                    }
+
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang=file_content["ProgLang"],
+                        readme=file_content["Readme"],
+                        files=starter_files,
+                    )
+                case LessonType.CLI_COMMAND:
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang="na",
+                        readme=l["LessonDataCLICommand"]["Readme"],
+                        files={},
+                    )
+
+                case _:
+                    # TODO: don't raise on other lesson types
+                    raise LessonParsingError("Unrecognized lesson type '{lesson_type}'")
         except KeyError as e:
             raise LessonParsingError(e)
 

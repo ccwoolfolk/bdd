@@ -70,9 +70,17 @@ def bdd_get(url: str):
     lesson.save()
     click.echo("...lesson retrieved and saved!")
 
-    editor_command = BddConfig().editor_command.value
-    lesson_paths = " ".join(str(p) for p in lesson.file_paths)
-    os.system(f"{editor_command} {lesson_paths}")
+    if lesson.is_supported_lesson_type:
+        editor_command = BddConfig().editor_command.value
+        lesson_paths = " ".join(str(p) for p in lesson.file_paths)
+        os.system(f"{editor_command} {lesson_paths}")
+    else:
+        click.echo(
+            click.style(
+                "Uh oh, this is not a supported lesson type! You'll need to complete this lesson without bdd.",
+                fg="red",
+            )
+        )
 
 
 @cli.command(name="run")
