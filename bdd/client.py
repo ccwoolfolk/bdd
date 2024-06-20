@@ -4,7 +4,8 @@ import time
 from bddconfig import BddConfig
 from bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
 
-base_url = "https://api.boot.dev/v1/lessons"
+LESSON_PATH = "/v1/lessons"
+REFRESH_PATH = "/v1/auth/refresh"
 
 
 def should_refresh_token(last_refresh: int) -> bool:
@@ -15,10 +16,18 @@ def should_refresh_token(last_refresh: int) -> bool:
     return seconds_since_refresh > 55 * 60
 
 
+def with_bootdev_cli_config(unwrapped):
+    path = BddConfig().expanded_bootdev_cli_config_path
+    bootdev_cli_config = BootdevCliConfig(path)
+
+    def wrapped(*args, **kwargs):
+        return unwrapped(*args, **kwargs, bootdev_cli_config=bootdev_cli_config)
+
+    return wrapped
+
+
 def require_auth(unauthd_func):
-    def authd_func(*args, **kwargs):
-        path = BddConfig().expanded_bootdev_cli_config_path
-        bootdev_cli_config = BootdevCliConfig(path)
+    def authd_func(*args, bootdev_cli_config, **kwargs):
 
         access_token = bootdev_cli_config.access_token
         refresh_token = bootdev_cli_config.refresh_token
@@ -36,7 +45,12 @@ def require_auth(unauthd_func):
             bootdev_cli_config.access_token = refreshed["access_token"]
             bootdev_cli_config.save()
 
-        return unauthd_func(*args, **kwargs, token=bootdev_cli_config.access_token)
+        return unauthd_func(
+            *args,
+            **kwargs,
+            token=bootdev_cli_config.access_token,
+            bootdev_cli_config=bootdev_cli_config,
+        )
 
     return authd_func
 
@@ -50,27 +64,34 @@ def create_headers(token: str) -> dict[str, str]:
 
 
 def fetch_refreshed_token(api_url: str, refresh_token: str):
-    refresh_path = "/v1/auth/refresh"
     headers = {"X-Refresh-Token": refresh_token}
 
-    res = requests.post(f"{api_url}{refresh_path}", headers=headers)
+    res = requests.post(f"{api_url}{REFRESH_PATH}", headers=headers)
     res.raise_for_status()
 
     return res.json()
 
 
+@with_bootdev_cli_config
 @require_auth
-def fetch_lesson_contents(lesson_uuid: str, token: str | None = None):
+def fetch_lesson_contents(
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
     if token is None:
         raise BddClientAuthError(
             "An access token was not provided while attempting to fetch content."
         )
+    if bootdev_cli_config is None:
+        raise BddClientAuthError(
+            "The Bootdev CLI config was not provided while attempting to fetch content."
+        )
 
     headers = create_headers(token)
 
-    req = requests.get(
-        f"https://api.boot.dev/v1/lessons/{lesson_uuid}", headers=headers
-    )
+    url = f"{bootdev_cli_config.api_url}{LESSON_PATH}/{lesson_uuid}"
+    req = requests.get(url, headers=headers)
 
     if req.status_code in (401, 403):
         raise BddClientAuthError(
