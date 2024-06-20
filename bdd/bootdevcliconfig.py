@@ -55,7 +55,7 @@ class BootdevCliConfig:
     @staticmethod
     def _prevalidate_last_refresh(token: Any):
         try:
-            assert isinstance(token, str)
+            assert isinstance(token, int)
             assert token != ""
         except AssertionError:
             raise BootdevCliConfigError(f"'{token}' is not a valid refresh token.")
