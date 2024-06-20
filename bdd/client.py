@@ -62,8 +62,9 @@ def fetch_refreshed_token(api_url: str, refresh_token: str):
 @require_auth
 def fetch_lesson_contents(lesson_uuid: str, token: str | None = None):
     if token is None:
-        # TODO: pick a more specific exception
-        raise Exception("Token not set")
+        raise BddClientAuthError(
+            "An access token was not provided while attempting to fetch content."
+        )
 
     headers = create_headers(token)
 
@@ -72,7 +73,12 @@ def fetch_lesson_contents(lesson_uuid: str, token: str | None = None):
     )
 
     if req.status_code in (401, 403):
-        # TODO: pick a more specific exception
-        raise Exception("Auth error. Refresh JWT")
+        raise BddClientAuthError(
+            f"Received status code {req.status_code} while fetching content."
+        )
 
     return req.json()
+
+
+class BddClientAuthError(Exception):
+    pass
