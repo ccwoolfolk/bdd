@@ -12,8 +12,6 @@ def should_refresh_token(last_refresh: int) -> bool:
     # 55 minutes mimics the boot.dev CLI code
     seconds_since_refresh = int(time.time()) - last_refresh
 
-    print(f"{int(seconds_since_refresh / 60)} minutes since refresh")
-
     return seconds_since_refresh > 55 * 60
 
 
@@ -52,8 +50,6 @@ def create_headers(token: str) -> dict[str, str]:
 
 
 def fetch_refreshed_token(api_url: str, refresh_token: str):
-    print("Refreshing...")
-
     refresh_path = "/v1/auth/refresh"
     headers = {"X-Refresh-Token": refresh_token}
 
@@ -65,7 +61,6 @@ def fetch_refreshed_token(api_url: str, refresh_token: str):
 
 @require_auth
 def fetch_lesson_contents(lesson_uuid: str, token: str | None = None):
-    print("Fetching...")
     if token is None:
         # TODO: pick a more specific exception
         raise Exception("Token not set")
@@ -75,7 +70,6 @@ def fetch_lesson_contents(lesson_uuid: str, token: str | None = None):
     req = requests.get(
         f"https://api.boot.dev/v1/lessons/{lesson_uuid}", headers=headers
     )
-    print(req)
 
     if req.status_code in (401, 403):
         # TODO: pick a more specific exception
