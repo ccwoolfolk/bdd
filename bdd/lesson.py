@@ -6,9 +6,11 @@ from .bddio import to_bdd_path, write_data
 
 LESSON_BASE_PATH = "lessons"
 
+
 class LessonType:
-    CODE_TESTS = 'type_code_tests'
-    CLI_COMMAND = 'type_cli_command'
+    CODE_TESTS = "type_code_tests"
+    CLI_COMMAND = "type_cli_command"
+
 
 SUPPORTED_LESSON_TYPES = {LessonType.CODE_TESTS}
 
@@ -40,6 +42,16 @@ class Lesson:
         lesson_dir = self.lesson_dir
         return [Path(lesson_dir, nm) for nm in ("readme.md", *self.files.keys())]
 
+    @property
+    def metadata(self) -> dict[str, Any]:
+        return {
+            "type": self.lesson_type,
+            "prog_lang": self.prog_lang,
+            "course_uuid": self.course_uuid,
+            "chapter_uuid": self.chapter_uuid,
+            "uuid": self.uuid,
+        }
+
     # TODO: This should probably be in a boot.dev service
     @staticmethod
     def from_api_payload(payload: Any) -> "Lesson":
@@ -47,9 +59,9 @@ class Lesson:
             raise LessonParsingError("Unrecognized api payload. Cannot parse.")
         try:
             l = payload["Lesson"]
-            course_uuid=l["CourseUUID"]
-            chapter_uuid=l["ChapterUUID"]
-            uuid=l["UUID"]
+            course_uuid = l["CourseUUID"]
+            chapter_uuid = l["ChapterUUID"]
+            uuid = l["UUID"]
             lesson_type = l["Type"]
 
             match lesson_type:
@@ -86,7 +98,10 @@ class Lesson:
             raise LessonParsingError(e)
 
     def save(self):
-        files_to_write = {**self.files, "readme.md": self.readme}
+        files_to_write = {
+            **self.files,
+            "readme.md": self.readme,
+            "metadata.json": self.metadata,
+        }
         for file_name, file_contents in files_to_write.items():
             write_data(file_contents, str(Path(self.lesson_dir, file_name)))
-        # TODO: Write metadata
