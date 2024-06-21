@@ -105,7 +105,7 @@ def bdd_run():
     match lesson.lesson_type:
         case LessonType.CODE_TESTS:
             raise NotImplementedError()
-        case LessonType.CLI_COMMAND:
+        case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev run {uuid}")
         case _:
@@ -120,7 +120,7 @@ def bdd_submit():
     match lesson.lesson_type:
         case LessonType.CODE_TESTS:
             raise NotImplementedError()
-        case LessonType.CLI_COMMAND:
+        case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev submit {uuid}")
         case _:

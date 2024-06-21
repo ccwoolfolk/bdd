@@ -12,9 +12,14 @@ METADATA_FILENAME = "metadata.json"
 class LessonType:
     CODE_TESTS = "type_code_tests"
     CLI_COMMAND = "type_cli_command"
+    HTTP_TESTS = "type_http_tests"
 
 
-SUPPORTED_LESSON_TYPES = {LessonType.CODE_TESTS, LessonType.CLI_COMMAND}
+SUPPORTED_LESSON_TYPES = {
+    LessonType.CODE_TESTS,
+    LessonType.CLI_COMMAND,
+    LessonType.HTTP_TESTS,
+}
 
 
 class LessonParsingError(Exception):
@@ -115,7 +120,16 @@ class Lesson:
                         readme=l["LessonDataCLICommand"]["Readme"],
                         files={},
                     )
-
+                case LessonType.HTTP_TESTS:
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang="na",
+                        readme=l["LessonDataHTTPTests"]["Readme"],
+                        files={},
+                    )
                 case _:
                     # TODO: don't raise on other lesson types
                     raise LessonParsingError(
