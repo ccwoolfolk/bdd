@@ -14,8 +14,18 @@ def cli():
 
 @cli.command(name="init")
 def bdd_init():
-    # TODO: If the user has a config, prompt for confirmation
     click.echo("Welcome to the bdd initialization process. Let's get you started.")
+
+    if BddConfig.get_config_exists():
+        proceed = click.confirm(
+            "You already have a config file. Proceeding will overwrite your existing config. Do you want to continue?"
+        )
+        if proceed:
+            click.echo("Ok, let's proceed.")
+        else:
+            click.echo("Aborting initialization process.")
+            return
+
     bdd_config = BddConfig(use_defaults=True)
 
     # Get the boot.dev CLI path
