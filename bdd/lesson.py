@@ -2,9 +2,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .bddio import to_bdd_path, write_data
+from .bddio import to_bdd_path, read_data, write_data
 
 LESSON_BASE_PATH = "lessons"
+README_FILENAME = "readme.md"
+METADATA_FILENAME = "metadata.json"
 
 
 class LessonType:
@@ -12,7 +14,7 @@ class LessonType:
     CLI_COMMAND = "type_cli_command"
 
 
-SUPPORTED_LESSON_TYPES = {LessonType.CODE_TESTS}
+SUPPORTED_LESSON_TYPES = {LessonType.CODE_TESTS, LessonType.CLI_COMMAND}
 
 
 class LessonParsingError(Exception):
@@ -35,12 +37,12 @@ class Lesson:
 
     @property
     def lesson_dir(self) -> Path:
-        return to_bdd_path(f"{LESSON_BASE_PATH}/{self.uuid}")
+        return Lesson.make_lesson_dir(self.uuid)
 
     @property
     def file_paths(self) -> list[Path]:
         lesson_dir = self.lesson_dir
-        return [Path(lesson_dir, nm) for nm in ("readme.md", *self.files.keys())]
+        return [Path(lesson_dir, nm) for nm in (README_FILENAME, *self.files.keys())]
 
     @property
     def metadata(self) -> dict[str, Any]:
@@ -51,6 +53,29 @@ class Lesson:
             "chapter_uuid": self.chapter_uuid,
             "uuid": self.uuid,
         }
+
+    @staticmethod
+    def make_lesson_dir(uuid: str) -> Path:
+        return to_bdd_path(f"{LESSON_BASE_PATH}/{uuid}")
+
+    @staticmethod
+    def from_disk(uuid: str) -> "Lesson":
+        lesson_dir = Lesson.make_lesson_dir(uuid)
+        metadata = read_data(str(Path(lesson_dir, METADATA_FILENAME)))
+        assert isinstance(metadata, dict), f"Metadata file in {uuid} is invalid"
+        readme = read_data(str(Path(lesson_dir, README_FILENAME)))
+        assert isinstance(readme, str), f"Readme file in {uuid} is invalid"
+
+        # TODO: finish adding files here
+        return Lesson(
+            course_uuid=metadata["course_uuid"],
+            chapter_uuid=metadata["chapter_uuid"],
+            uuid=uuid,
+            lesson_type=metadata["type"],
+            prog_lang=metadata["prog_lang"],
+            readme=readme,
+            files={},
+        )
 
     # TODO: This should probably be in a boot.dev service
     @staticmethod
@@ -100,8 +125,8 @@ class Lesson:
     def save(self):
         files_to_write = {
             **self.files,
-            "readme.md": self.readme,
-            "metadata.json": self.metadata,
+            README_FILENAME: self.readme,
+            METADATA_FILENAME: self.metadata,
         }
         for file_name, file_contents in files_to_write.items():
             write_data(file_contents, str(Path(self.lesson_dir, file_name)))

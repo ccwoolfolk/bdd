@@ -5,7 +5,7 @@ import os
 from . import client
 from . import progress
 from .bddio import load_yaml, to_bdd_path
-from .lesson import Lesson, LessonParsingError
+from .lesson import Lesson, LessonParsingError, LessonType
 from .bddconfig import BddConfig
 
 
@@ -88,23 +88,31 @@ def bdd_get(url: str):
         lesson_paths = " ".join(str(p) for p in lesson.file_paths)
         os.system(f"{editor_command} {lesson_paths}")
     else:
-        click.echo(
-            click.style(
-                "Uh oh, this is not a supported lesson type! You'll need to complete this lesson without bdd.",
-                fg="red",
-            )
+        _print_error(
+            "Uh oh, this is not a supported lesson type! You'll need to complete this lesson without bdd."
         )
+
     progress.move_to(uuid)
 
 
 @cli.command(name="run")
-@click.argument("uuid", required=False)
 def bdd_run():
-    click.echo("run stub")
+    # get the uuid
+    uuid = progress.get_current_lesson_uuid()
+    # get the lesson
+    lesson = Lesson.from_disk(uuid)
+    # match the lesson type to the action
+    match lesson.lesson_type:
+        case LessonType.CODE_TESTS:
+            raise NotImplementedError()
+        case LessonType.CLI_COMMAND:
+            # We are Very Smart so we pass the work to the bootdev cli
+            os.system(f"bootdev run {uuid}")
+        case _:
+            raise NotImplementedError()
 
 
 @cli.command(name="submit")
-@click.argument("uuid", required=False)
 def bdd_submit():
     click.echo("submit stub")
 
@@ -133,3 +141,12 @@ def bdd_prev():
         )
     except progress.LessonDoesNotExistError:
         click.echo("There is no previous lesson.")
+
+
+def _print_error(msg: str):
+    click.echo(
+        click.style(
+            msg,
+            fg="red",
+        )
+    )

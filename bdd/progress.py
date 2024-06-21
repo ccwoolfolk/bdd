@@ -8,8 +8,11 @@ PROGRESS_FILE = "progress.json"
 # TODO: store names and chapter/course to display on moves
 
 
-def get_current_lesson_uuid() -> str | None:
-    return _read_progress().get("current")
+def get_current_lesson_uuid() -> str:
+    uuid = _read_progress().get("current")
+    if uuid is None:
+        raise NoLastActiveLessonError()
+    return uuid
 
 
 def move_to(lesson_uuid: str):
