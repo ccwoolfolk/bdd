@@ -61,15 +61,17 @@ def bdd_init():
 
 
 @cli.command(name="get")
-@click.argument("url", required=True)
-def bdd_get(url: str):
-    # TODO: handle no url case now that progress tracking is available
+@click.argument("url", required=False)
+def bdd_get(url: str | None):
     # TODO: check if files already exist to avoid clobbering existing work
     # TODO: move this
-    split_url = url.split("/lessons/")
-    assert len(split_url) == 2
-    uuid = split_url[1]
-    assert "/" not in uuid
+    if url is not None:
+        split_url = url.split("/lessons/")
+        assert len(split_url) == 2
+        uuid = split_url[1]
+        assert "/" not in uuid
+    else:
+        uuid = progress.get_current_lesson_uuid()
 
     click.echo(f"Getting lesson {uuid}")
     contents = client.fetch_lesson_contents(uuid)
