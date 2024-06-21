@@ -5,6 +5,7 @@ from .bddconfig import BddConfig
 from .bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
 
 LESSON_PATH = "/v1/lessons"
+PROGRESS_PATH = "/v1/course_progress_by_lesson"
 REFRESH_PATH = "/v1/auth/refresh"
 
 
@@ -74,32 +75,59 @@ def fetch_refreshed_token(api_url: str, refresh_token: str):
 
 @with_bootdev_cli_config
 @require_auth
+def fetch_course_progress(
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
+    return _make_bdd_req(
+        f"{PROGRESS_PATH}/{lesson_uuid}", token, bootdev_cli_config
+    ).json()
+
+
+@with_bootdev_cli_config
+@require_auth
 def fetch_lesson_contents(
     lesson_uuid: str,
     token: str | None = None,
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
+    return _make_bdd_req(
+        f"{LESSON_PATH}/{lesson_uuid}", token, bootdev_cli_config
+    ).json()
+
+
+def _make_bdd_req(
+    path: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+) -> requests.Response:
+    checked_token, config = _validate_api_inputs(token, bootdev_cli_config)
+    headers = create_headers(checked_token)
+    url = f"{config.api_url}{path}"
+    res = requests.get(url, headers=headers)
+
+    if res.status_code != requests.codes.ok:
+        raise BddClientError(
+            f"Received status code {res.status_code} while fetching from {url}."
+        )
+
+    return res
+
+
+def _validate_api_inputs(
+    token: str | None, config: BootdevCliConfig | None
+) -> tuple[str, BootdevCliConfig]:
     if token is None:
-        raise BddClientAuthError(
+        raise BddClientError(
             "An access token was not provided while attempting to fetch content."
         )
-    if bootdev_cli_config is None:
-        raise BddClientAuthError(
+    if config is None:
+        raise BddClientError(
             "The Bootdev CLI config was not provided while attempting to fetch content."
         )
-
-    headers = create_headers(token)
-
-    url = f"{bootdev_cli_config.api_url}{LESSON_PATH}/{lesson_uuid}"
-    req = requests.get(url, headers=headers)
-
-    if req.status_code in (401, 403):
-        raise BddClientAuthError(
-            f"Received status code {req.status_code} while fetching content."
-        )
-
-    return req.json()
+    return token, config
 
 
-class BddClientAuthError(Exception):
+class BddClientError(Exception):
     pass

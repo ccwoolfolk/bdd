@@ -54,5 +54,3 @@ bdd --help
 - bdd submit [optional uuid]
   - same as run, then submit
   - on success, prompt for auto advance
-- bdd next [optional uuid]
-- bdd prev [optional uuid]

@@ -1,7 +1,9 @@
+from typing import Callable
 import click
 import os
 
-from bdd import client
+from . import client
+from . import progress
 from .bddio import load_yaml, to_bdd_path
 from .lesson import Lesson, LessonParsingError
 from .bddconfig import BddConfig
@@ -61,6 +63,7 @@ def bdd_init():
 @cli.command(name="get")
 @click.argument("url", required=True)
 def bdd_get(url: str):
+    # TODO: handle no url case now that progress tracking is available
     # TODO: check if files already exist to avoid clobbering existing work
     # TODO: move this
     split_url = url.split("/lessons/")
@@ -91,6 +94,7 @@ def bdd_get(url: str):
                 fg="red",
             )
         )
+    progress.move_to(uuid)
 
 
 @cli.command(name="run")
@@ -106,12 +110,26 @@ def bdd_submit():
 
 
 @cli.command(name="next")
-@click.argument("uuid", required=False)
 def bdd_next():
-    click.echo("next stub")
+    try:
+        uuid = progress.move_to_next()
+        click.echo(f"Moved to lesson {uuid}")
+    except progress.NoLastActiveLessonError:
+        click.echo(
+            "There is no last active lesson saved. Try first retrieving a lesson directly via the URL before using the next and prev functionality."
+        )
+    except progress.LessonDoesNotExistError:
+        click.echo("There is no next lesson. Congrats on completing the course.")
 
 
 @cli.command(name="prev")
-@click.argument("uuid", required=False)
 def bdd_prev():
-    click.echo("prev stub")
+    try:
+        uuid = progress.move_to_prev()
+        click.echo(f"Moved to lesson {uuid}")
+    except progress.NoLastActiveLessonError:
+        click.echo(
+            "There is no last active lesson saved. Try first retrieving a lesson directly via the URL before using the next and prev functionality."
+        )
+    except progress.LessonDoesNotExistError:
+        click.echo("There is no previous lesson.")
