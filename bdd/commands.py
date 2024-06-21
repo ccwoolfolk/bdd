@@ -97,11 +97,9 @@ def bdd_get(url: str):
 
 @cli.command(name="run")
 def bdd_run():
-    # get the uuid
     uuid = progress.get_current_lesson_uuid()
-    # get the lesson
     lesson = Lesson.from_disk(uuid)
-    # match the lesson type to the action
+
     match lesson.lesson_type:
         case LessonType.CODE_TESTS:
             raise NotImplementedError()
@@ -114,7 +112,17 @@ def bdd_run():
 
 @cli.command(name="submit")
 def bdd_submit():
-    click.echo("submit stub")
+    uuid = progress.get_current_lesson_uuid()
+    lesson = Lesson.from_disk(uuid)
+
+    match lesson.lesson_type:
+        case LessonType.CODE_TESTS:
+            raise NotImplementedError()
+        case LessonType.CLI_COMMAND:
+            # We are Very Smart so we pass the work to the bootdev cli
+            os.system(f"bootdev submit {uuid}")
+        case _:
+            raise NotImplementedError()
 
 
 @cli.command(name="next")
