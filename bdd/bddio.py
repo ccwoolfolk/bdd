@@ -28,14 +28,16 @@ def _write(contents: dict | str, path: str) -> None:
 
 
 # General purpose reader that prepends the local path with the right directory
-def read_data(local_path: str) -> dict[str, Any]:
+def read_data(local_path: str) -> dict[str, Any] | str:
     path = Path(to_bdd_path(local_path))
 
     match path.suffix:
-        case '.json':
+        case ".json":
             return load_json(str(path))
-        case '.yaml':
+        case ".yaml":
             return load_yaml(str(path))
+        case ".md" | ".txt":
+            return load_text(str(path))
         case _:
             raise ValueError()
 
@@ -50,9 +52,15 @@ def load_json(path: str) -> dict[str, str]:
         return json.load(f)
 
 
+def load_text(path: str) -> str:
+    with open(path) as f:
+        return f.read()
+
+
 def load_yaml(path: str) -> dict[str, Any]:
     with open(path) as f:
         return yaml.safe_load(f)
+
 
 def write_yaml(contents: dict, path: str):
     with open(path, "w") as f:
