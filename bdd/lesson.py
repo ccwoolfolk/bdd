@@ -118,7 +118,9 @@ class Lesson:
 
                 case _:
                     # TODO: don't raise on other lesson types
-                    raise LessonParsingError("Unrecognized lesson type '{lesson_type}'")
+                    raise LessonParsingError(
+                        f"Unrecognized lesson type '{lesson_type}'"
+                    )
         except KeyError as e:
             raise LessonParsingError(e)
 
