@@ -18,10 +18,9 @@ def should_refresh_token(last_refresh: int) -> bool:
 
 
 def with_bootdev_cli_config(unwrapped):
-    path = BddConfig().expanded_bootdev_cli_config_path
-    bootdev_cli_config = BootdevCliConfig(path)
-
     def wrapped(*args, **kwargs):
+        path = BddConfig().expanded_bootdev_cli_config_path
+        bootdev_cli_config = BootdevCliConfig(path)
         return unwrapped(*args, **kwargs, bootdev_cli_config=bootdev_cli_config)
 
     return wrapped
