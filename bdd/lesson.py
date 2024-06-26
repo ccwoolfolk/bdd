@@ -9,18 +9,25 @@ README_FILENAME = "readme.md"
 METADATA_FILENAME = "metadata.json"
 
 
+class ProgLang:
+    GO = "go"
+    PYTHON = "py"
+
+
 class LessonType:
-    CODE_TESTS = "type_code_tests"
-    CLI_COMMAND = "type_cli_command"
-    HTTP_TESTS = "type_http_tests"
     CHOICE = "type_choice"
+    CLI_COMMAND = "type_cli_command"
+    CODE = "type_code"
+    CODE_TESTS = "type_code_tests"
+    HTTP_TESTS = "type_http_tests"
 
 
 SUPPORTED_LESSON_TYPES = {
-    LessonType.CODE_TESTS,
-    LessonType.CLI_COMMAND,
-    LessonType.HTTP_TESTS,
     LessonType.CHOICE,
+    LessonType.CLI_COMMAND,
+    LessonType.CODE,
+    LessonType.CODE_TESTS,
+    LessonType.HTTP_TESTS,
 }
 
 
@@ -97,6 +104,22 @@ class Lesson:
             lesson_type = l["Type"]
 
             match lesson_type:
+                case LessonType.CODE:
+                    file_content = l["LessonDataCodeCompletion"]
+                    starter_files = {
+                        f["Name"]: f["Content"] for f in file_content["StarterFiles"]
+                    }
+
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang=file_content["ProgLang"],
+                        readme=file_content["Readme"],
+                        files=starter_files,
+                    )
+
                 case LessonType.CODE_TESTS:
                     file_content = l["LessonDataCodeTests"]
                     starter_files = {

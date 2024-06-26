@@ -113,6 +113,40 @@ def submit_multiple_choice(
     ).json()
 
 
+@with_bootdev_cli_config
+@require_auth
+def submit_code(
+    output: str,
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
+    return _make_bdd_req(
+        f"{LESSON_PATH}/{lesson_uuid}/code",
+        token,
+        bootdev_cli_config,
+        http_method="POST",
+        payload={"output": output},
+    ).json()
+
+
+@with_bootdev_cli_config
+@require_auth
+def submit_code_tests(
+    output: str,
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
+    return _make_bdd_req(
+        f"{LESSON_PATH}/{lesson_uuid}/code_tests",
+        token,
+        bootdev_cli_config,
+        http_method="POST",
+        payload={"output": output},
+    ).json()
+
+
 def _make_bdd_req(
     path: str,
     token: str | None = None,

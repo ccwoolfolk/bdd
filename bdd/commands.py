@@ -1,10 +1,27 @@
 from typing import Callable
 import os
+from pathlib import Path
+import subprocess
 
 from . import client
 from . import progress
 from .lesson import Lesson, LessonParsingError, LessonType, ProgLang
 from .bddconfig import BddConfig
+
+
+# TODO: move code execution fns
+def run_go(file_path: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["go", "run", file_path], capture_output=True, text=True)
+
+
+def run_go_test(lesson_dir: str, file_names: list[str]):
+    test_args = ["go", "test", "-v", *file_names]
+    return subprocess.run(test_args, capture_output=True, text=True, cwd=lesson_dir)
+
+
+def run_python(file_path: str) -> subprocess.CompletedProcess[str]:
+    # TODO: make python/python3 configurable
+    return subprocess.run(["python3", file_path], capture_output=True, text=True)
 
 
 class CommandError(Exception):
@@ -57,13 +74,36 @@ def open_lesson(lesson: Lesson):
     os.system(f"{editor_command} {lesson_paths}")
 
 
-def run_lesson():
+def run_lesson() -> str | None:
     uuid = progress.get_current_lesson_uuid()
     lesson = Lesson.from_disk(uuid)
 
     match lesson.lesson_type:
-        case LessonType.CODE_TESTS:
-            raise NotImplementedError()
+        case LessonType.CODE | LessonType.CODE_TESTS:
+            is_test = lesson.lesson_type == LessonType.CODE_TESTS
+
+            match lesson.prog_lang:
+                # TODO: don't hardcode main.go, main.py, etc.
+                case ProgLang.GO:
+                    if is_test:
+                        results = run_go_test(
+                            str(lesson.lesson_dir), ["main_test.go", "main.go"]
+                        )
+                    else:
+                        results = run_go(str(Path(lesson.lesson_dir, "main.go")))
+                case ProgLang.PYTHON:
+                    fn = "main_test.py" if is_test else "main.py"
+                    results = run_python(str(Path(lesson.lesson_dir, fn)))
+                case _:
+                    raise NotImplementedError()
+
+            try:
+                results.check_returncode()
+            except subprocess.CalledProcessError:
+                output = "\n".join([results.stdout, results.stderr])
+                raise CommandError(output)
+            return results.stdout
+
         case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev run {uuid}")
@@ -80,8 +120,21 @@ def submit_lesson(submission: str | None):
     lesson = Lesson.from_disk(uuid)
 
     match lesson.lesson_type:
+        case LessonType.CODE:
+            results = run_lesson()
+            if results is None:
+                raise CommandError(
+                    "Running the code produced no results. This is probably an error."
+                )
+            client.submit_code(results, lesson.uuid)
         case LessonType.CODE_TESTS:
-            raise NotImplementedError()
+            # TODO: should this set withSubmit differently?
+            results = run_lesson()
+            if results is None:
+                raise CommandError(
+                    "Running the code produced no results. This is probably an error."
+                )
+            client.submit_code_tests(results, lesson.uuid)
         case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev submit {uuid}")

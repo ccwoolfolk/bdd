@@ -56,7 +56,9 @@ def bdd_get(url: str | None):
 @cli.command(name="run")
 def bdd_run():
     try:
-        commands.run_lesson()
+        results = commands.run_lesson()
+        if results is not None:
+            click.echo(results)
     except commands.CommandError as e:
         _print_error(str(e))
 
