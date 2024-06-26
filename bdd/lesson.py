@@ -13,12 +13,14 @@ class LessonType:
     CODE_TESTS = "type_code_tests"
     CLI_COMMAND = "type_cli_command"
     HTTP_TESTS = "type_http_tests"
+    CHOICE = "type_choice"
 
 
 SUPPORTED_LESSON_TYPES = {
     LessonType.CODE_TESTS,
     LessonType.CLI_COMMAND,
     LessonType.HTTP_TESTS,
+    LessonType.CHOICE,
 }
 
 
@@ -130,6 +132,20 @@ class Lesson:
                         readme=l["LessonDataHTTPTests"]["Readme"],
                         files={},
                     )
+                case LessonType.CHOICE:
+                    question_page_payload = l["LessonDataMultipleChoice"]["Question"]
+                    question = question_page_payload["Question"]
+                    answers = "\n\n".join(question_page_payload["Answers"])
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang="na",
+                        readme=l["LessonDataMultipleChoice"]["Readme"],
+                        files={"question.md": f"{question}\n{answers}"},
+                    )
+
                 case _:
                     # TODO: don't raise on other lesson types
                     raise LessonParsingError(

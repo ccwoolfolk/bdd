@@ -108,12 +108,17 @@ def bdd_run():
         case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev run {uuid}")
+        case LessonType.CHOICE:
+            click.echo(
+                "Multiple choice lessons don't support `run`. You can `submit` directly."
+            )
         case _:
             raise NotImplementedError()
 
 
 @cli.command(name="submit")
-def bdd_submit():
+@click.argument("submission", required=False)
+def bdd_submit(submission: str | None):
     uuid = progress.get_current_lesson_uuid()
     lesson = Lesson.from_disk(uuid)
 
@@ -123,6 +128,13 @@ def bdd_submit():
         case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev submit {uuid}")
+        case LessonType.CHOICE:
+            if submission is None or submission == "":
+                _print_error(
+                    'This is a multiple choice lesson. Submit like: `bdd submit "My answer here"`'
+                )
+                return
+            client.submit_multiple_choice(submission, uuid)
         case _:
             raise NotImplementedError()
 

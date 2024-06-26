@@ -96,15 +96,41 @@ def fetch_lesson_contents(
     ).json()
 
 
+@with_bootdev_cli_config
+@require_auth
+def submit_multiple_choice(
+    answer: str,
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
+    return _make_bdd_req(
+        f"{LESSON_PATH}/{lesson_uuid}/multiple_choice",
+        token,
+        bootdev_cli_config,
+        http_method="POST",
+        payload={"answer": answer},
+    ).json()
+
+
 def _make_bdd_req(
     path: str,
     token: str | None = None,
     bootdev_cli_config: BootdevCliConfig | None = None,
+    http_method: str = "GET",
+    payload: dict | None = None,
 ) -> requests.Response:
     checked_token, config = _validate_api_inputs(token, bootdev_cli_config)
     headers = create_headers(checked_token)
     url = f"{config.api_url}{path}"
-    res = requests.get(url, headers=headers)
+
+    match http_method:
+        case "GET":
+            res = requests.get(url, headers=headers)
+        case "POST":
+            res = requests.post(url, headers=headers, json=payload)
+        case _:
+            raise BddClientError(f"Unrecognized http method: {http_method}")
 
     if res.status_code != requests.codes.ok:
         raise BddClientError(
