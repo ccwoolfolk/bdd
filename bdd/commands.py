@@ -19,9 +19,30 @@ def run_go_test(lesson_dir: str, file_names: list[str]):
     return subprocess.run(test_args, capture_output=True, text=True, cwd=lesson_dir)
 
 
-def run_python(file_path: str) -> subprocess.CompletedProcess[str]:
+def _replace_in_file(file_path: Path | str, from_text: str, to_text: str):
+    # Use this for go tests because the variable assignment for withSubmit is
+    # embedded directly into the source code. It's gross to mutate the file, but I
+    # can't see a workaround like creating a temp file being a good complexity vs
+    # value tradeoff.
+    with open(file_path, "r") as f:
+        text = f.read()
+    new_text = text.replace(from_text, to_text)
+    with open(file_path, "w") as f:
+        f.write(new_text)
+
+
+def run_python(file_path: str, is_submit: bool) -> subprocess.CompletedProcess[str]:
     # TODO: make python/python3 configurable
-    return subprocess.run(["python3", file_path], capture_output=True, text=True)
+    # Wrap the test file in a temporary script where we can set run vs submit. We
+    # could instead prepend the variable assignment to the test file, but this
+    # approach avoids creating any differences in the local file and the boot.dev
+    # version. It's also annoying to have a file change while it is likely open in
+    # the student's editor.
+    py_var = "__SUBMIT__" if is_submit else "__RUN__"
+    py_command = "\n".join(
+        [f"{py_var} = True", f"with open('{file_path}') as f:", "\texec(f.read())"]
+    )
+    return subprocess.run(["python3", "-c", py_command], capture_output=True, text=True)
 
 
 class CommandError(Exception):
@@ -74,7 +95,7 @@ def open_lesson(lesson: Lesson):
     os.system(f"{editor_command} {lesson_paths}")
 
 
-def run_lesson() -> str | None:
+def run_lesson(is_submit: bool = False) -> str | None:
     uuid = progress.get_current_lesson_uuid()
     lesson = Lesson.from_disk(uuid)
 
@@ -86,14 +107,29 @@ def run_lesson() -> str | None:
                 # TODO: don't hardcode main.go, main.py, etc.
                 case ProgLang.GO:
                     if is_test:
+                        test_path = Path(lesson.lesson_dir, "main_test.go")
+                        if is_submit:
+                            _replace_in_file(
+                                test_path,
+                                from_text="withSubmit = false",
+                                to_text="withSubmit = true",
+                            )
+                        else:
+                            _replace_in_file(
+                                test_path,
+                                from_text="withSubmit = true",
+                                to_text="withSubmit = false",
+                            )
                         results = run_go_test(
                             str(lesson.lesson_dir), ["main_test.go", "main.go"]
                         )
                     else:
                         results = run_go(str(Path(lesson.lesson_dir, "main.go")))
                 case ProgLang.PYTHON:
-                    fn = "main_test.py" if is_test else "main.py"
-                    results = run_python(str(Path(lesson.lesson_dir, fn)))
+                    fn: str = "main_test.py" if is_test else "main.py"
+                    results = run_python(
+                        str(Path(lesson.lesson_dir, fn)), is_submit=is_submit
+                    )
                 case _:
                     raise NotImplementedError()
 
