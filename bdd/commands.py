@@ -143,10 +143,8 @@ def run_lesson(is_submit: bool = False) -> str | None:
         case LessonType.CLI_COMMAND | LessonType.HTTP_TESTS:
             # We are Very Smart so we pass the work to the bootdev cli
             os.system(f"bootdev run {uuid}")
-        case LessonType.CHOICE:
-            raise CommandError(
-                "Multiple choice lessons don't support `run`. You can `submit` directly."
-            )
+        case LessonType.CHOICE | LessonType.MANUAL:
+            raise CommandError("This lesson type doesn't support `run`.")
         case _:
             raise NotImplementedError()
 
@@ -180,6 +178,8 @@ def submit_lesson(submission: str | None):
                     'This is a multiple choice lesson. Submit like: `bdd submit "My answer here"`'
                 )
             client.submit_multiple_choice(submission, uuid)
+        case LessonType.MANUAL:
+            client.submit_manual(uuid)
         case _:
             raise NotImplementedError()
 

@@ -20,6 +20,7 @@ class LessonType:
     CODE = "type_code"
     CODE_TESTS = "type_code_tests"
     HTTP_TESTS = "type_http_tests"
+    MANUAL = "type_manual"
 
 
 SUPPORTED_LESSON_TYPES = {
@@ -28,6 +29,7 @@ SUPPORTED_LESSON_TYPES = {
     LessonType.CODE,
     LessonType.CODE_TESTS,
     LessonType.HTTP_TESTS,
+    LessonType.MANUAL,
 }
 
 
@@ -167,6 +169,16 @@ class Lesson:
                         prog_lang="na",
                         readme=l["LessonDataMultipleChoice"]["Readme"],
                         files={"question.md": f"{question}\n{answers}"},
+                    )
+                case LessonType.MANUAL:
+                    return Lesson(
+                        course_uuid=course_uuid,
+                        chapter_uuid=chapter_uuid,
+                        uuid=uuid,
+                        lesson_type=lesson_type,
+                        prog_lang="na",
+                        readme=l["LessonDataManual"]["Readme"],
+                        files={},
                     )
 
                 case _:

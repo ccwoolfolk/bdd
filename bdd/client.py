@@ -98,6 +98,21 @@ def fetch_lesson_contents(
 
 @with_bootdev_cli_config
 @require_auth
+def submit_manual(
+    lesson_uuid: str,
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+):
+    return _make_bdd_req(
+        f"{LESSON_PATH}/{lesson_uuid}/manual",
+        token,
+        bootdev_cli_config,
+        http_method="POST",
+    ).json()
+
+
+@with_bootdev_cli_config
+@require_auth
 def submit_multiple_choice(
     answer: str,
     lesson_uuid: str,
