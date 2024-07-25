@@ -1,3 +1,5 @@
+import datetime
+import json
 from typing import Callable
 import os
 from pathlib import Path
@@ -210,3 +212,46 @@ def go_to_prev() -> str:
         raise CommandError("There is no previous lesson.")
 
     return uuid
+
+
+# TODO: move this to a boot.dev service
+def get_error_from_wss_message(message: str) -> str | None:
+    lesson_submission_event = json.loads(message)["LessonSubmissionEvent"]
+    return (
+        lesson_submission_event["Err"]
+        or lesson_submission_event["StructuredErrHTTPTest"]
+    )
+
+
+Logger = Callable[[str], None]
+
+
+def open_bdd_connection(
+    *, info_logger: Logger, success_logger: Logger, error_logger: Logger
+) -> None:
+    def on_message(message: str):
+        stamp = datetime.datetime.now().strftime("%H:%M:%S")
+
+        error_message = get_error_from_wss_message(message)
+
+        if error_message:
+            error_logger(f"\n{stamp}: [incorrect] {error_message}")
+        else:
+            success_logger(f"\n{stamp}: Correct!")
+
+    def on_error(error: str):
+        # This isn't ideal, but websocket-client errors on keyboard interrupt
+        # which prints an empty error when you close the connection.
+        # See https://github.com/websocket-client/websocket-client/issues/964
+        if error:
+            error_logger(f"Error: {error}")
+
+    def on_close():
+        info_logger("Disconnected.")
+
+    def on_open():
+        info_logger("Connected.")
+
+    client.open_bdd_ws_connection(
+        on_message=on_message, on_error=on_error, on_open=on_open, on_close=on_close
+    )

@@ -1,4 +1,4 @@
--e git+ssh://git@github.com/ccwoolfolk/bdd.git@67bd297312a72e62c6cdc233c9360e22a66d2cac#egg=bdd
+-e git+ssh://git@github.com/ccwoolfolk/bdd.git@4bc81b14af0878b0caaa97569e4097300f78d9ce#egg=bdd
 black==24.4.2
 certifi==2024.6.2
 charset-normalizer==3.3.2
@@ -13,3 +13,4 @@ requests==2.32.3
 tomli==2.0.1
 typing_extensions==4.12.2
 urllib3==2.2.1
+websocket-client==1.8.0

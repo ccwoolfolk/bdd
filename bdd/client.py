@@ -1,5 +1,9 @@
+import datetime
+from typing import Callable
+import json
 import requests
 import time
+import websocket
 
 from .bddconfig import BddConfig
 from .bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
@@ -160,6 +164,32 @@ def submit_code_tests(
         http_method="POST",
         payload={"output": output},
     ).json()
+
+
+@with_bootdev_cli_config
+@require_auth
+def open_bdd_ws_connection(
+    *,
+    on_open: Callable[[], None],
+    on_close: Callable[[], None],
+    on_error: Callable[[str], None],
+    on_message: Callable[[str], None],
+    token: str | None = None,
+    bootdev_cli_config: BootdevCliConfig | None = None,
+) -> websocket.WebSocketApp:
+    checked_token, config = _validate_api_inputs(token, bootdev_cli_config)
+    uri = f"wss://api.boot.dev/v1/ws/pushevents?token={checked_token}"
+
+    # websocket.enableTrace(True)
+    ws = websocket.WebSocketApp(
+        uri,
+        on_message=lambda _ws, message: on_message(message),
+        on_error=lambda _ws, err: on_error(err),
+        on_close=lambda _ws, _close_status_code, _close_msg: on_close(),
+    )
+    ws.on_open = lambda _ws: on_open()
+    ws.run_forever()
+    return ws
 
 
 def _make_bdd_req(

@@ -1,5 +1,6 @@
 import click
 import os
+from functools import partial
 
 from . import commands
 from .bddio import load_yaml, to_bdd_path
@@ -90,13 +91,19 @@ def bdd_prev():
         _print_error(str(e))
 
 
-def _print_error(msg: str):
-    click.echo(
-        click.style(
-            msg,
-            fg="red",
+@cli.command(name="connect")
+def bdd_connect():
+    try:
+        commands.open_bdd_connection(
+            info_logger=click.secho,
+            success_logger=partial(click.secho, fg="green"),
+            error_logger=_print_error,
         )
-    )
+    except commands.CommandError as e:
+        _print_error(str(e))
+
+
+_print_error = partial(click.secho, fg="red")
 
 
 def _prompt_for_boot_dev_cli_config_path(bdd_config: BddConfig) -> str:
