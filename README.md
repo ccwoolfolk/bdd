@@ -10,7 +10,13 @@ Python `3.10` or greater is recommended.
 
 Run `bdd init` to set up your configuration.
 
+`bdd connect` will open a websocket connection to receive success/failure messages when submitting lessons. You will likely want this in a visible terminal while working.
+
 `bdd get [Boot.dev lesson URL]` will retrieve the lesson files and open them with the editor stored in your configuration.
+
+`bdd next` and `bdd prev` will move between lessons. `bdd get` without a URL will get the lesson contents based on your current position.
+
+`bdd run` and `bdd submit` function similarly to the respective Boot.dev commands.
 
 ## Development
 
