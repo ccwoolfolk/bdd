@@ -2,7 +2,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .bddio import check_exists, to_bdd_path, read_data, write_data
+from .bddio import (
+    check_exists,
+    get_file_paths_from_dir,
+    to_bdd_path,
+    load_text,
+    read_data,
+    write_data,
+)
 
 LESSON_BASE_PATH = "lessons"
 README_FILENAME = "readme.md"
@@ -81,12 +88,26 @@ class Lesson:
     @staticmethod
     def from_disk(uuid: str) -> "Lesson":
         lesson_dir = Lesson.make_lesson_dir(uuid)
-        metadata = read_data(str(Path(lesson_dir, METADATA_FILENAME)))
+        metadata_path = str(Path(lesson_dir, METADATA_FILENAME))
+        metadata = read_data(metadata_path)
         assert isinstance(metadata, dict), f"Metadata file in {uuid} is invalid"
-        readme = read_data(str(Path(lesson_dir, README_FILENAME)))
+
+        readme_path = str(Path(lesson_dir, README_FILENAME))
+        readme = read_data(readme_path)
         assert isinstance(readme, str), f"Readme file in {uuid} is invalid"
 
-        # TODO: finish adding files here
+        other_file_paths = [
+            fn
+            for fn in get_file_paths_from_dir(lesson_dir)
+            if fn not in (metadata_path, readme_path)
+        ]
+
+        files = {}
+        for p in other_file_paths:
+            nm = p.split("/")[-1]
+            content = load_text(p)
+            files[nm] = content
+
         return Lesson(
             course_uuid=metadata["course_uuid"],
             chapter_uuid=metadata["chapter_uuid"],
@@ -94,7 +115,7 @@ class Lesson:
             lesson_type=metadata["type"],
             prog_lang=metadata["prog_lang"],
             readme=readme,
-            files={},
+            files=files,
         )
 
     # TODO: This should probably be in a boot.dev service

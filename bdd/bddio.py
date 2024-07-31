@@ -13,6 +13,10 @@ def check_exists(path: str | Path) -> bool:
     return os.path.exists(path)
 
 
+def get_file_paths_from_dir(path: str | Path) -> list[str]:
+    return [fn.path for fn in os.scandir(path) if fn.is_file()]
+
+
 def to_bdd_path(local_path: str) -> Path:
     return Path(os.path.expanduser(BASE_PATH), local_path)
 
