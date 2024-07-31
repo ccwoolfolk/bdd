@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .bddio import to_bdd_path, read_data, write_data
+from .bddio import check_exists, to_bdd_path, read_data, write_data
 
 LESSON_BASE_PATH = "lessons"
 README_FILENAME = "readme.md"
@@ -73,6 +73,10 @@ class Lesson:
     @staticmethod
     def make_lesson_dir(uuid: str) -> Path:
         return to_bdd_path(f"{LESSON_BASE_PATH}/{uuid}")
+
+    @staticmethod
+    def check_exists(uuid: str) -> bool:
+        return check_exists(Lesson.make_lesson_dir(uuid))
 
     @staticmethod
     def from_disk(uuid: str) -> "Lesson":

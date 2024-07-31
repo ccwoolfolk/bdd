@@ -9,6 +9,10 @@ import yaml
 BASE_PATH = "~/.bdd"
 
 
+def check_exists(path: str | Path) -> bool:
+    return os.path.exists(path)
+
+
 def to_bdd_path(local_path: str) -> Path:
     return Path(os.path.expanduser(BASE_PATH), local_path)
 

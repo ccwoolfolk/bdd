@@ -43,14 +43,27 @@ def bdd_init():
 
 @cli.command(name="get")
 @click.argument("url", required=False)
-def bdd_get(url: str | None):
+@click.option(
+    "-f",
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Force a download even if the lesson exists locally",
+)
+def bdd_get(url: str | None, force: bool):
     try:
-        lesson = commands.get_lesson(url)
+        lesson, already_exists = commands.get_lesson(url, force_download=force)
     except commands.CommandError as e:
         _print_error(str(e))
         return
 
-    click.echo(f"Lesson '{lesson.uuid}' retrieved and saved!")
+    message = f"Lesson '{lesson.uuid}' "
+    if already_exists:
+        message += "already exists. Using existing copy."
+    else:
+        message += "retrieved and saved!"
+    click.echo(message)
+    click.pause()
     commands.open_lesson(lesson)
 
 

@@ -62,8 +62,9 @@ def initialize_bdd(
     return bdd_config
 
 
-def get_lesson(url: str | None) -> Lesson:
-    # TODO: check if files already exist to avoid clobbering existing work
+def get_lesson(url: str | None, force_download: bool = False) -> tuple[Lesson, bool]:
+    already_exists = False
+
     # TODO: move this
     if url is not None:
         split_url = url.split("/lessons/")
@@ -73,14 +74,19 @@ def get_lesson(url: str | None) -> Lesson:
     else:
         uuid = progress.get_current_lesson_uuid()
 
-    contents = client.fetch_lesson_contents(uuid)
+    if force_download or not Lesson.check_exists(uuid):
+        contents = client.fetch_lesson_contents(uuid)
 
-    try:
-        lesson = Lesson.from_api_payload(contents)
-    except LessonParsingError as e:
-        raise CommandError(f"Unable to parse your lesson: {e}")
+        try:
+            lesson = Lesson.from_api_payload(contents)
+        except LessonParsingError as e:
+            raise CommandError(f"Unable to parse your lesson: {e}")
 
-    lesson.save()
+        lesson.save()
+    else:
+        already_exists = True
+        lesson = Lesson.from_disk(uuid)
+
     progress.move_to(uuid)
 
     if not lesson.is_supported_lesson_type:
@@ -88,7 +94,7 @@ def get_lesson(url: str | None) -> Lesson:
             "Uh oh, this is not a supported lesson type! You'll need to complete this lesson without bdd."
         )
 
-    return lesson
+    return lesson, already_exists
 
 
 def open_lesson(lesson: Lesson):

@@ -14,7 +14,7 @@ Run `bdd init` to set up your configuration.
 
 `bdd get [Boot.dev lesson URL]` will retrieve the lesson files and open them with the editor stored in your configuration.
 
-`bdd next` and `bdd prev` will move between lessons. `bdd get` without a URL will get the lesson contents based on your current position.
+`bdd next` and `bdd prev` will move between lessons. `bdd get` without a URL will get the lesson contents based on your current position. This is useful after changing position and also for resuming work after exiting your editor.
 
 `bdd run` and `bdd submit` function similarly to the respective Boot.dev commands.
 
