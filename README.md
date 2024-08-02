@@ -30,21 +30,17 @@ python3 -m venv .venv
 
 and activate it with `source .venv/bin/activate`.
 
-### Install dependencies
+### Install for development with dependencies
 
-`python3 -m pip install -r requirements.txt`
+`python3 -m pip install -e .[dev]`
 
 ### Add a dependency
 
-```bash
-python3 -m pip install [package]
-python3 -m pip freeze > requirements.txt
-```
+Add to `pyproject.yaml` then repeat the `pip install` command above.
 
 ### Manual testing
 
 ```bash
-python3 -m pip install --editable .
 bdd --help
 ```
 
