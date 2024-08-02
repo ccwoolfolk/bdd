@@ -44,6 +44,14 @@ Add to `pyproject.yaml` then repeat the `pip install` command above.
 bdd --help
 ```
 
+### Automated testing
+
+After following the dev installation steps:
+
+```bash
+pytest
+```
+
 ## How boot.dev lessons work
 
 `bdd` essentially relies on an undocumented, internal set of boot.dev APIs and conventions. Yes, this is gross, and it will definitely break as changes are made to the platform. The "bet" is that the functionality will be worth this inconvenience.
