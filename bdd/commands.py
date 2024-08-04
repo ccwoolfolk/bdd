@@ -47,6 +47,10 @@ def run_python(file_path: str, is_submit: bool) -> subprocess.CompletedProcess[s
     return subprocess.run(["python3", "-c", py_command], capture_output=True, text=True)
 
 
+def run_js(file_path: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(["node", file_path], capture_output=True, text=True)
+
+
 class CommandError(Exception):
     pass
 
@@ -138,6 +142,10 @@ def run_lesson(is_submit: bool = False) -> str | None:
                     results = run_python(
                         str(Path(lesson.lesson_dir, fn)), is_submit=is_submit
                     )
+                case ProgLang.JAVASCRIPT:
+                    # TODO: what is the !!is_test file name?
+                    fn: str = "main.js" if is_test else "main.js"
+                    results = run_js(str(Path(lesson.lesson_dir, fn)))
                 case _:
                     raise NotImplementedError()
 

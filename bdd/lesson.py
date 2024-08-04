@@ -19,6 +19,7 @@ METADATA_FILENAME = "metadata.json"
 class ProgLang:
     GO = "go"
     PYTHON = "py"
+    JAVASCRIPT = "js"
 
 
 class LessonType:
