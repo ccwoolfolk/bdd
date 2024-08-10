@@ -228,16 +228,49 @@ def go_to_prev() -> str:
     return uuid
 
 
-# TODO: move this to a boot.dev service
-def get_error_from_wss_message(message: str) -> str | None:
-    lesson_submission_event = json.loads(message)["LessonSubmissionEvent"]
-    return (
-        lesson_submission_event["Err"]
-        or lesson_submission_event["StructuredErrHTTPTest"]
-    )
-
-
 Logger = Callable[[str], None]
+
+
+# TODO: move this to a boot.dev service
+class BddMessage:
+    def __init__(self, message: str | dict, on_error: Logger, on_success: Logger):
+        self.data = message if isinstance(message, dict) else json.loads(message)
+        self.on_error = on_error
+        self.on_success = on_success
+
+    def process(self):
+        self.on_success(str(self.data))
+
+    @staticmethod
+    def from_message(
+        message: str, on_error: Logger, on_success: Logger
+    ) -> "BddMessage":
+        data = json.loads(message)
+
+        if "NotificationCreated" in data:
+            return NotificationCreatedMessage(message, on_error, on_success)
+        elif "LessonSubmissionEvent" in data:
+            return LessonSubmissionEventMessage(message, on_error, on_success)
+        else:
+            return BddMessage(message, on_error, on_success)
+
+
+class NotificationCreatedMessage(BddMessage):
+    def process(self):
+        data = self.data["NotificationCreated"]
+        notification_type = data["NotificationType"]
+        notification_data = data["NotificationData"]
+        self.on_success(f"Nofication created: {notification_type}, {notification_data}")
+
+
+class LessonSubmissionEventMessage(BddMessage):
+    def process(self):
+        data = self.data["LessonSubmissionEvent"]
+        err = data.get("Err") or data.get("StructuredErrHTTPTest")
+        if err:
+            self.on_error(f"[incorrect]: {err}")
+        else:
+            self.on_success("Correct!")
 
 
 def open_bdd_connection(
@@ -246,12 +279,13 @@ def open_bdd_connection(
     def on_message(message: str):
         stamp = datetime.datetime.now().strftime("%H:%M:%S")
 
-        error_message = get_error_from_wss_message(message)
+        parsed = BddMessage.from_message(
+            message,
+            on_error=lambda m: error_logger(f"\n{stamp}: {m}"),
+            on_success=lambda m: success_logger(f"\n{stamp}: {m}"),
+        )
 
-        if error_message:
-            error_logger(f"\n{stamp}: [incorrect] {error_message}")
-        else:
-            success_logger(f"\n{stamp}: Correct!")
+        parsed.process()
 
     def on_error(error: str):
         # This isn't ideal, but websocket-client errors on keyboard interrupt
