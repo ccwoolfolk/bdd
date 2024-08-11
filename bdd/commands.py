@@ -303,3 +303,14 @@ def open_bdd_connection(
     client.open_bdd_ws_connection(
         on_message=on_message, on_error=on_error, on_open=on_open, on_close=on_close
     )
+
+
+def print_bdd_progress(logger: Logger, verbose: bool) -> None:
+    try:
+        summary = progress.retrieve_course_progress(None)
+    except progress.NoLastActiveLessonError:
+        logger(
+            "No active lesson found. Try first retrieving a lesson directly via the URL."
+        )
+        return
+    progress.print_progress(summary, logger, verbose)

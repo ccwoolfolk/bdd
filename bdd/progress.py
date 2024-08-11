@@ -1,4 +1,5 @@
-from typing import Callable
+from dataclasses import dataclass
+from typing import Any, Callable
 from bdd.client import fetch_course_progress
 from .bddio import read_data, write_data
 
@@ -86,6 +87,81 @@ def _find_prev_and_next(lesson_uuid: str) -> tuple[str | None, str | None]:
 
                 return prev_uuid, next_uuid
     return None, None
+
+
+@dataclass
+class ChapterProgress:
+    n_required_complete: int
+    n_required: int
+    n_optional_complete: int
+    n_total: int
+
+
+LessonSummary = tuple[bool, str, bool, bool]
+ChapterSummary = tuple[str, bool, ChapterProgress, list[LessonSummary]]
+
+
+def retrieve_course_progress(uuid: str | None) -> list[ChapterSummary]:
+    current_uuid = uuid or get_current_lesson_uuid()
+    payload = fetch_course_progress(current_uuid)
+    return summarize_course_progress(current_uuid, lambda: payload)
+
+
+def summarize_course_progress(
+    active_uuid: str, get_progress: Callable[[], dict[str, Any]]
+) -> list[ChapterSummary]:
+    # retrieve progress
+    # parse progress
+    progress_map = get_progress()
+
+    chapters: list[ChapterSummary] = []
+
+    for chapter in progress_map["Chapters"]:
+        title = chapter["Title"]
+        n_required_complete = 0
+        n_required = 0
+        n_optional_complete = 0
+        n_total = 0
+        is_chapter_active = False
+        lessons: list[LessonSummary] = []
+
+        for l in chapter["Lessons"]:
+            n_total += 1
+            n_required_complete += int(l["IsRequired"] and l["IsComplete"])
+            n_optional_complete += int(not l["IsRequired"] and l["IsComplete"])
+            n_required += int(l["IsRequired"])
+            is_lesson_active = l["UUID"] == active_uuid
+            is_chapter_active = is_chapter_active or is_lesson_active
+            lessons.append(
+                (is_lesson_active, l["Title"], l["IsRequired"], l["IsComplete"])
+            )
+
+        chapter_progress = ChapterProgress(
+            n_total=n_total,
+            n_required_complete=n_required_complete,
+            n_required=n_required,
+            n_optional_complete=n_optional_complete,
+        )
+        chapters.append((title, is_chapter_active, chapter_progress, lessons))
+
+    return chapters
+
+
+def print_progress(
+    summary: list[ChapterSummary], logger: Callable[[str], None], verbose: bool
+) -> None:
+    for title, is_active, progress, lessons in summary:
+        if not verbose and not is_active:
+            continue
+        message = "* " if is_active else "  "
+        message += f"{title} ({progress.n_required_complete}/{progress.n_required} required, {progress.n_optional_complete + progress.n_required_complete}/{progress.n_total} total)"
+        logger(message)
+        if is_active:
+            for lesson in lessons:
+                l_is_active, l_title, l_required, l_complete = lesson
+                l_message = "  * " if l_is_active else "    "
+                l_message += f"{l_title} ({'✅' if l_complete else '❌'})"
+                logger(l_message)
 
 
 class ProgressError(Exception):

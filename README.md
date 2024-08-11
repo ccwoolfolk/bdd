@@ -18,6 +18,8 @@ Run `bdd init` to set up your configuration.
 
 `bdd run` and `bdd submit` function similarly to the respective Boot.dev commands.
 
+`bdd progress` will show your progress in the current course, including lesson completion status.
+
 ## Development
 
 ### Virtual environment

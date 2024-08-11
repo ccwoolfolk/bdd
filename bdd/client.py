@@ -1,12 +1,10 @@
-import datetime
-from typing import Callable
-import json
+from typing import Callable, Any
 import requests
 import time
 import websocket
 
 from .bddconfig import BddConfig
-from .bootdevcliconfig import BootdevCliConfig, BootdevCliConfigError
+from .bootdevcliconfig import BootdevCliConfig
 
 LESSON_PATH = "/v1/lessons"
 PROGRESS_PATH = "/v1/course_progress_by_lesson"
@@ -82,7 +80,7 @@ def fetch_course_progress(
     lesson_uuid: str,
     token: str | None = None,
     bootdev_cli_config: BootdevCliConfig | None = None,
-):
+) -> dict[Any, Any]:
     return _make_bdd_req(
         f"{PROGRESS_PATH}/{lesson_uuid}", token, bootdev_cli_config
     ).json()

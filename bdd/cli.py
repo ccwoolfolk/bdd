@@ -104,6 +104,18 @@ def bdd_prev():
         _print_error(str(e))
 
 
+@cli.command(name="progress")
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Show all chapters in the course, not just the active one",
+)
+def bdd_progress(verbose: bool):
+    commands.print_bdd_progress(click.echo, verbose)
+
+
 @cli.command(name="connect")
 def bdd_connect():
     try:
