@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from . import bddservice
 from .bddio import (
     check_exists,
     get_file_paths_from_dir,
@@ -39,10 +40,6 @@ SUPPORTED_LESSON_TYPES = {
     LessonType.HTTP_TESTS,
     LessonType.MANUAL,
 }
-
-
-class LessonParsingError(Exception):
-    pass
 
 
 @dataclass
@@ -121,97 +118,7 @@ class Lesson:
 
     @staticmethod
     def from_api_payload(payload: Any) -> "Lesson":
-        if not isinstance(payload, dict):
-            raise LessonParsingError("Unrecognized api payload. Cannot parse.")
-        try:
-            l = payload["Lesson"]
-            course_uuid = l["CourseUUID"]
-            chapter_uuid = l["ChapterUUID"]
-            uuid = l["UUID"]
-            lesson_type = l["Type"]
-
-            match lesson_type:
-                case LessonType.CODE:
-                    file_content = l["LessonDataCodeCompletion"]
-                    starter_files = {
-                        f["Name"]: f["Content"] for f in file_content["StarterFiles"]
-                    }
-
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang=file_content["ProgLang"],
-                        readme=file_content["Readme"],
-                        files=starter_files,
-                    )
-
-                case LessonType.CODE_TESTS:
-                    file_content = l["LessonDataCodeTests"]
-                    starter_files = {
-                        f["Name"]: f["Content"] for f in file_content["StarterFiles"]
-                    }
-
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang=file_content["ProgLang"],
-                        readme=file_content["Readme"],
-                        files=starter_files,
-                    )
-                case LessonType.CLI_COMMAND:
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang="na",
-                        readme=l["LessonDataCLICommand"]["Readme"],
-                        files={},
-                    )
-                case LessonType.HTTP_TESTS:
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang="na",
-                        readme=l["LessonDataHTTPTests"]["Readme"],
-                        files={},
-                    )
-                case LessonType.CHOICE:
-                    question_page_payload = l["LessonDataMultipleChoice"]["Question"]
-                    question = question_page_payload["Question"]
-                    answers = "\n\n".join(question_page_payload["Answers"])
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang="na",
-                        readme=l["LessonDataMultipleChoice"]["Readme"],
-                        files={"question.md": f"{question}\n{answers}"},
-                    )
-                case LessonType.MANUAL:
-                    return Lesson(
-                        course_uuid=course_uuid,
-                        chapter_uuid=chapter_uuid,
-                        uuid=uuid,
-                        lesson_type=lesson_type,
-                        prog_lang="na",
-                        readme=l["LessonDataManual"]["Readme"],
-                        files={},
-                    )
-
-                case _:
-                    raise LessonParsingError(
-                        f"Unrecognized lesson type '{lesson_type}'"
-                    )
-        except KeyError as e:
-            raise LessonParsingError(e)
+        return bddservice.parse_lesson_api_payload(payload)
 
     def save(self):
         files_to_write = {

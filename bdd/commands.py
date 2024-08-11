@@ -1,5 +1,4 @@
 import datetime
-import json
 from typing import Callable
 import os
 from pathlib import Path
@@ -7,7 +6,9 @@ import subprocess
 
 from . import client
 from . import progress
-from .lesson import Lesson, LessonParsingError, LessonType, ProgLang
+from . import bddservice
+from .lesson import Lesson, LessonType, ProgLang
+from .bddservice import LessonParsingError
 from .bddconfig import BddConfig
 from . import bddsubprocess
 
@@ -50,13 +51,8 @@ def initialize_bdd(
 
 def get_lesson(url: str | None, force_download: bool = False) -> tuple[Lesson, bool]:
     already_exists = False
-
-    # TODO: move this
     if url is not None:
-        split_url = url.split("/lessons/")
-        assert len(split_url) == 2
-        uuid = split_url[1]
-        assert "/" not in uuid
+        uuid = bddservice.get_lesson_uuid_from_url(url)
     else:
         uuid = progress.get_current_lesson_uuid()
 
@@ -210,58 +206,16 @@ def go_to_prev() -> str:
     return uuid
 
 
-Logger = Callable[[str], None]
-
-
-# TODO: move this to a boot.dev service
-class BddMessage:
-    def __init__(self, message: str | dict, on_error: Logger, on_success: Logger):
-        self.data = message if isinstance(message, dict) else json.loads(message)
-        self.on_error = on_error
-        self.on_success = on_success
-
-    def process(self):
-        self.on_success(str(self.data))
-
-    @staticmethod
-    def from_message(
-        message: str, on_error: Logger, on_success: Logger
-    ) -> "BddMessage":
-        data = json.loads(message)
-
-        if "NotificationCreated" in data:
-            return NotificationCreatedMessage(message, on_error, on_success)
-        elif "LessonSubmissionEvent" in data:
-            return LessonSubmissionEventMessage(message, on_error, on_success)
-        else:
-            return BddMessage(message, on_error, on_success)
-
-
-class NotificationCreatedMessage(BddMessage):
-    def process(self):
-        data = self.data["NotificationCreated"]
-        notification_type = data["NotificationType"]
-        notification_data = data["NotificationData"]
-        self.on_success(f"Nofication created: {notification_type}, {notification_data}")
-
-
-class LessonSubmissionEventMessage(BddMessage):
-    def process(self):
-        data = self.data["LessonSubmissionEvent"]
-        err = data.get("Err") or data.get("StructuredErrHTTPTest")
-        if err:
-            self.on_error(f"[incorrect]: {err}")
-        else:
-            self.on_success("Correct!")
-
-
 def open_bdd_connection(
-    *, info_logger: Logger, success_logger: Logger, error_logger: Logger
+    *,
+    info_logger: bddservice.Logger,
+    success_logger: bddservice.Logger,
+    error_logger: bddservice.Logger,
 ) -> None:
     def on_message(message: str):
         stamp = datetime.datetime.now().strftime("%H:%M:%S")
 
-        parsed = BddMessage.from_message(
+        parsed = bddservice.BddMessage.from_message(
             message,
             on_error=lambda m: error_logger(f"\n{stamp}: {m}"),
             on_success=lambda m: success_logger(f"\n{stamp}: {m}"),
@@ -287,7 +241,7 @@ def open_bdd_connection(
     )
 
 
-def print_bdd_progress(logger: Logger, verbose: bool) -> None:
+def print_bdd_progress(logger: bddservice.Logger, verbose: bool) -> None:
     try:
         summary = progress.retrieve_course_progress(None)
     except progress.NoLastActiveLessonError:
