@@ -119,7 +119,6 @@ class Lesson:
             files=files,
         )
 
-    # TODO: This should probably be in a boot.dev service
     @staticmethod
     def from_api_payload(payload: Any) -> "Lesson":
         if not isinstance(payload, dict):
@@ -208,7 +207,6 @@ class Lesson:
                     )
 
                 case _:
-                    # TODO: don't raise on other lesson types
                     raise LessonParsingError(
                         f"Unrecognized lesson type '{lesson_type}'"
                     )

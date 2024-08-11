@@ -6,9 +6,6 @@ from .bddio import read_data, write_data
 PROGRESS_FILE = "progress.json"
 
 
-# TODO: store names and chapter/course to display on moves
-
-
 def get_current_lesson_uuid() -> str:
     uuid = _read_progress().get("current")
     if uuid is None:
@@ -62,7 +59,9 @@ def _save_progress(
 
 def _read_progress() -> dict[str, str | None]:
     try:
-        return read_data(PROGRESS_FILE)
+        data = read_data(PROGRESS_FILE)
+        assert type(data) == dict, "Unexpected format for progress file"
+        return data
     except FileNotFoundError:
         raise NoLastActiveLessonError()
 

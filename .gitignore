@@ -1,3 +1,4 @@
 bdd-venv/
 bdd.egg-info/
 **/__pycache__/**
+.coverage

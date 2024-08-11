@@ -9,16 +9,7 @@ from . import client
 from . import progress
 from .lesson import Lesson, LessonParsingError, LessonType, ProgLang
 from .bddconfig import BddConfig
-
-
-# TODO: move code execution fns
-def run_go(file_path: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["go", "run", file_path], capture_output=True, text=True)
-
-
-def run_go_test(lesson_dir: str, file_names: list[str]):
-    test_args = ["go", "test", "-v", *file_names]
-    return subprocess.run(test_args, capture_output=True, text=True, cwd=lesson_dir)
+from . import bddsubprocess
 
 
 def _replace_in_file(file_path: Path | str, from_text: str, to_text: str):
@@ -31,24 +22,6 @@ def _replace_in_file(file_path: Path | str, from_text: str, to_text: str):
     new_text = text.replace(from_text, to_text)
     with open(file_path, "w") as f:
         f.write(new_text)
-
-
-def run_python(file_path: str, is_submit: bool) -> subprocess.CompletedProcess[str]:
-    # TODO: make python/python3 configurable
-    # Wrap the test file in a temporary script where we can set run vs submit. We
-    # could instead prepend the variable assignment to the test file, but this
-    # approach avoids creating any differences in the local file and the boot.dev
-    # version. It's also annoying to have a file change while it is likely open in
-    # the student's editor.
-    py_var = "__SUBMIT__" if is_submit else "__RUN__"
-    py_command = "\n".join(
-        [f"{py_var} = True", f"with open('{file_path}') as f:", "\texec(f.read())"]
-    )
-    return subprocess.run(["python3", "-c", py_command], capture_output=True, text=True)
-
-
-def run_js(file_path: str) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(["node", file_path], capture_output=True, text=True)
 
 
 class CommandError(Exception):
@@ -116,7 +89,6 @@ def run_lesson(is_submit: bool = False) -> str | None:
             is_test = lesson.lesson_type == LessonType.CODE_TESTS
 
             match lesson.prog_lang:
-                # TODO: don't hardcode main.go, main.py, etc.
                 case ProgLang.GO:
                     if is_test:
                         test_path = Path(lesson.lesson_dir, "main_test.go")
@@ -132,20 +104,22 @@ def run_lesson(is_submit: bool = False) -> str | None:
                                 from_text="withSubmit = true",
                                 to_text="withSubmit = false",
                             )
-                        results = run_go_test(
+                        results = bddsubprocess.run_go_test(
                             str(lesson.lesson_dir), ["main_test.go", "main.go"]
                         )
                     else:
-                        results = run_go(str(Path(lesson.lesson_dir, "main.go")))
+                        results = bddsubprocess.run_go(
+                            str(Path(lesson.lesson_dir, "main.go"))
+                        )
                 case ProgLang.PYTHON:
                     fn: str = "main_test.py" if is_test else "main.py"
-                    results = run_python(
+                    results = bddsubprocess.run_python(
                         str(Path(lesson.lesson_dir, fn)), is_submit=is_submit
                     )
                 case ProgLang.JAVASCRIPT:
                     # TODO: what is the !!is_test file name?
                     fn: str = "main.js" if is_test else "main.js"
-                    results = run_js(str(Path(lesson.lesson_dir, fn)))
+                    results = bddsubprocess.run_js(str(Path(lesson.lesson_dir, fn)))
                 case _:
                     raise NotImplementedError()
 
@@ -178,7 +152,6 @@ def submit_lesson(submission: str | None):
                 )
             client.submit_code(results, lesson.uuid)
         case LessonType.CODE_TESTS:
-            # TODO: should this set withSubmit differently?
             results = run_lesson()
             if results is None:
                 raise CommandError(
