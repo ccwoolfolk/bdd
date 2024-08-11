@@ -17,7 +17,8 @@ def get_current_lesson_uuid() -> str:
 
 
 def move_to(lesson_uuid: str):
-    prev_uuid, next_uuid = _find_prev_and_next(lesson_uuid)
+    progress_map = fetch_course_progress(lesson_uuid)
+    prev_uuid, next_uuid = find_prev_and_next(lesson_uuid, progress_map)
     _save_progress(lesson_uuid, prev_uuid, next_uuid)
 
 
@@ -66,24 +67,30 @@ def _read_progress() -> dict[str, str | None]:
         raise NoLastActiveLessonError()
 
 
-def _find_prev_and_next(lesson_uuid: str) -> tuple[str | None, str | None]:
-    payload = fetch_course_progress(lesson_uuid)
-    course_uuid = payload["CourseUUID"]
+def find_prev_and_next(
+    lesson_uuid: str, progress_map: dict[Any, Any]
+) -> tuple[str | None, str | None]:
 
-    chapters = payload["Chapters"]
-    for chapter in chapters:
+    chapters = progress_map["Chapters"]
+    for chapter_i, chapter in enumerate(chapters):
         lessons = chapter["Lessons"]
         for lesson_i, lesson in enumerate(lessons):
             if lesson["UUID"] == lesson_uuid:
-                chapter_uuid = chapter["UUID"]
                 prev_uuid = None
                 next_uuid = None
 
-                # TODO: this needs to handle changing chapters
                 if lesson_i > 0:
                     prev_uuid = lessons[lesson_i - 1]["UUID"]
+                elif chapter_i > 0:
+                    prev_chapter = chapters[chapter_i - 1]
+                    prev_lessons = prev_chapter["Lessons"]
+                    prev_uuid = prev_lessons[-1]["UUID"]
+
                 if lesson_i < len(lessons) - 1:
                     next_uuid = lessons[lesson_i + 1]["UUID"]
+                elif chapter_i < len(chapters) - 1:
+                    next_chapter = chapters[chapter_i + 1]
+                    next_uuid = next_chapter["Lessons"][0]["UUID"]
 
                 return prev_uuid, next_uuid
     return None, None

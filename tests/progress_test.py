@@ -1,6 +1,7 @@
-from bdd.progress import summarize_course_progress
+import pytest
+from bdd.progress import find_prev_and_next, summarize_course_progress
 
-mockProgress = {
+mockProgressReal = {
     "CourseUUID": "3b39d0f6-f944-4f1b-832d-a1daba32eda4",
     "Chapters": [
         {
@@ -1268,7 +1269,7 @@ mockProgress = {
 
 
 def test_summarize_progress():
-    get_progress = lambda: mockProgress
+    get_progress = lambda: mockProgressReal
     uuid = "98e60d90-0111-4626-a690-70124be1e0ba"
 
     actual = summarize_course_progress(uuid, get_progress)
@@ -1287,3 +1288,60 @@ def test_summarize_progress():
     assert first_lesson_in_active[3]
 
     assert not actual[1][1]  # is not active
+
+
+mockProgressSimplified = {
+    "CourseUUID": "course-uuid",
+    "Chapters": [
+        {
+            "UUID": "c1",
+            "Title": "c1",
+            "Lessons": [
+                {
+                    "UUID": "l1",
+                    "Title": "l1",
+                    "IsRequired": True,
+                    "IsComplete": True,
+                },
+                {
+                    "UUID": "l2",
+                    "Title": "l2",
+                    "IsRequired": True,
+                    "IsComplete": False,
+                },
+            ],
+        },
+        {
+            "UUID": "c2",
+            "Title": "c2",
+            "Lessons": [
+                {
+                    "UUID": "l3",
+                    "Title": "l3",
+                    "IsRequired": True,
+                    "IsComplete": False,
+                },
+                {
+                    "UUID": "l4",
+                    "Title": "l4",
+                    "IsRequired": True,
+                    "IsComplete": False,
+                },
+            ],
+        },
+    ],
+}
+
+
+@pytest.mark.parametrize(
+    "lesson_uuid, expected",
+    [
+        ("l1", (None, "l2")),
+        ("l2", ("l1", "l3")),
+        ("l3", ("l2", "l4")),
+        ("l4", ("l3", None)),
+    ],
+)
+def test_find_prev_and_next(lesson_uuid, expected):
+    actual = find_prev_and_next(lesson_uuid, mockProgressSimplified)
+    assert actual == expected
