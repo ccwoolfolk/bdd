@@ -4,7 +4,7 @@ from functools import partial
 
 from . import commands
 from .bddio import load_yaml, to_bdd_path
-from .bddconfig import BddConfig
+from .bddconfig import BddConfig, ConfigField
 
 
 @click.group()
@@ -27,8 +27,17 @@ def bdd_init():
             return
 
     try:
+        defaults = BddConfig(use_defaults=True)
         commands.initialize_bdd(
-            _prompt_for_boot_dev_cli_config_path, _prompt_for_editor_command
+            get_boot_dev_cli_config_path=_prompt_for_boot_dev_cli_config_path,
+            get_editor_command=lambda: _prompt_for_config_field(
+                defaults.editor_command
+            ),
+            get_python_command=lambda: _prompt_for_config_field(
+                defaults.python_command
+            ),
+            get_go_command=lambda: _prompt_for_config_field(defaults.go_command),
+            get_js_command=lambda: _prompt_for_config_field(defaults.js_command),
         )
     except commands.CommandError as e:
         _print_error(str(e))
@@ -140,7 +149,7 @@ def _prompt_for_boot_dev_cli_config_path(bdd_config: BddConfig) -> str:
         )
 
         try:
-            load_yaml(os.path.expandvars(str(path)))
+            load_yaml(os.path.expanduser(str(path)))
         except FileNotFoundError:
             click.echo("Invalid path")
             path = None
@@ -148,7 +157,5 @@ def _prompt_for_boot_dev_cli_config_path(bdd_config: BddConfig) -> str:
     return path
 
 
-def _prompt_for_editor_command(bdd_config: BddConfig) -> str:
-    return click.prompt(
-        bdd_config.editor_command.description, bdd_config.editor_command.default
-    )
+def _prompt_for_config_field(field: ConfigField) -> str:
+    return click.prompt(field.description, field.default)

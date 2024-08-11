@@ -16,7 +16,7 @@ Windows file paths are not supported at this time but [could be](docs/CONTRIBUTI
 
 ## Usage
 
-Run `bdd init` to set up your configuration.
+Run `bdd init` to set up your configuration. You will specify how to run go python (ex: `python` vs `python3`), go (ex: `go` vs `go[version]`), etc. Note that the editor command should accept a list of files to open. For example, `nvim -p` (default) for Neovim, `code` for VS Code, or a `/mnt/c/Program Files/` path if you code in the [best IDE for programming](https://youtu.be/X34ZmkeZDos).
 
 `bdd connect` will open a websocket connection to receive success/failure messages when submitting lessons. You will likely want this in a visible terminal while working.
 

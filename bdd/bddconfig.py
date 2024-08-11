@@ -1,6 +1,5 @@
 import os
 from dataclasses import dataclass
-from typing import Any
 
 from .bddio import read_data, write_data
 
@@ -28,7 +27,21 @@ class BddConfig:
         self.editor_command = ConfigField(
             "editor_command", "nvim -p", "nvim -p", "Editor command"
         )
-        self.fields = [self.boot_dev_cli_config_path, self.editor_command]
+        self.python_command = ConfigField(
+            "python_command", "python3", "python3", "Python command"
+        )
+        self.go_command = ConfigField("go_command", "go", "go", "Go command")
+        self.js_command = ConfigField(
+            "js_command", "node", "node", "JavaScript command"
+        )
+
+        self.fields = [
+            self.boot_dev_cli_config_path,
+            self.editor_command,
+            self.python_command,
+            self.go_command,
+            self.js_command,
+        ]
 
         if not use_defaults:
             loaded_config = BddConfig._load_config()
@@ -41,7 +54,10 @@ class BddConfig:
 
     @staticmethod
     def _load_config() -> dict[str, str]:
-        return read_data(BddConfig.CONFIG_FILENAME)
+        data = read_data(BddConfig.CONFIG_FILENAME)
+        if type(data) != dict:
+            raise ValueError("Invalid config file")
+        return data
 
     @staticmethod
     def get_config_exists():

@@ -29,12 +29,21 @@ class CommandError(Exception):
 
 
 def initialize_bdd(
+    *,
     get_boot_dev_cli_config_path: Callable[[BddConfig], str],
-    get_editor_command: Callable[[BddConfig], str],
+    get_editor_command: Callable[[], str],
+    get_python_command: Callable[[], str],
+    get_go_command: Callable[[], str],
+    get_js_command: Callable[[], str],
 ) -> BddConfig:
     bdd_config = BddConfig(use_defaults=True)
+
     bdd_config.boot_dev_cli_config_path.value = get_boot_dev_cli_config_path(bdd_config)
-    bdd_config.editor_command.value = get_editor_command(bdd_config)
+    bdd_config.editor_command.value = get_editor_command()
+    bdd_config.python_command.value = get_python_command()
+    bdd_config.go_command.value = get_go_command()
+    bdd_config.js_command.value = get_js_command()
+
     bdd_config.save()
     return bdd_config
 
