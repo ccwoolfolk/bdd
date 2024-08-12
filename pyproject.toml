@@ -5,7 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "bdd"
 version = "0.1.0"
+authors = [
+  { name="Casey Woolfolk", email="ccwoolfolk@gmail.com" },
+]
 description = "A CLI tool for completing boot.dev lessons"
+readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "click>=8.1",
@@ -24,6 +28,10 @@ dev = [
 
 [project.scripts]
 bdd = "bdd.cli:cli"
+
+[project.urls]
+Homepage = "https://github.com/ccwoolfolk/bdd"
+Issues = "https://github.com/ccwoolfolk/bdd/issues"
 
 [tool.setuptools]
 packages = ["bdd"]
