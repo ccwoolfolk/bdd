@@ -4,6 +4,8 @@
 
 **Why?** The Boot.dev web interface is great. If you find the videos helpful or enjoy the gamification elements, stick to the web interface. But if you want to hone your skills in the command line and gain familiarity with your editor, give `bdd` a try.
 
+![](https://github.com/ccwoolfolk/assets/blob/main/bdd/bdd-demo.gif)
+
 Interested in contributing? Check out the [contribution guidelines](docs/CONTRIBUTING.md).
 
 ## Prereqs
