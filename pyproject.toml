@@ -3,8 +3,8 @@ requires = ["setuptools>=45", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "bdd"
-version = "0.1.0"
+name = "bddcmd"
+version = "1.0.0"
 authors = [
   { name="Casey Woolfolk", email="ccwoolfolk@gmail.com" },
 ]

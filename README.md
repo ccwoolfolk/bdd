@@ -16,6 +16,14 @@ Python `3.10` or greater is recommended.
 
 Windows file paths are not supported at this time but [could be](docs/CONTRIBUTING.md).
 
+## Installation
+
+Note the pypi package name is `bddcmd`, but the command is `bdd`. It's 2024, and short names are scarce.
+
+```bash
+python3 -m pip install bddcmd
+bdd --help
+```
 ## Usage
 
 Run `bdd init` to set up your configuration. You will specify how to run go python (ex: `python` vs `python3`), go (ex: `go` vs `go[version]`), etc. Note that the editor command should accept a list of files to open. For example, `nvim -p` (default) for Neovim, `code` for VS Code, or a `/mnt/c/Program Files/` path if you code in the [best IDE for programming](https://youtu.be/X34ZmkeZDos).
@@ -62,6 +70,26 @@ After following the dev installation steps:
 
 ```bash
 pytest
+```
+
+### Release
+
+```
+python3 -m pip install --upgrade build
+python3 -m build
+```
+
+Add credentials to `.pypirc` and run:
+
+```bash
+python3 -m pip install --upgrade twine
+python3 -m twine upload --repository testpypi dist/* # testpypi
+# python3 -m twine upload dist/* # pypi
+```
+Activate a venv and install the package from testpypi to test.
+
+```bash
+python3 -m pip install --index-url https://test.pypi.org/simple/ --no-deps bdd
 ```
 
 ## How boot.dev lessons work
