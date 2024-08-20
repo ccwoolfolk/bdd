@@ -6,7 +6,8 @@ import websocket
 from .bddconfig import BddConfig
 from .bootdevcliconfig import BootdevCliConfig
 
-LESSON_PATH = "/v1/lessons"
+LESSON_CONTENT_PATH = "/v1/static/lessons"
+LESSON_SUBMIT_PATH = "/v1/lessons"
 PROGRESS_PATH = "/v1/course_progress_by_lesson"
 REFRESH_PATH = "/v1/auth/refresh"
 
@@ -94,7 +95,7 @@ def fetch_lesson_contents(
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
     return _make_bdd_req(
-        f"{LESSON_PATH}/{lesson_uuid}", token, bootdev_cli_config
+        f"{LESSON_CONTENT_PATH}/{lesson_uuid}", token, bootdev_cli_config
     ).json()
 
 
@@ -106,7 +107,7 @@ def submit_manual(
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
     return _make_bdd_req(
-        f"{LESSON_PATH}/{lesson_uuid}/manual",
+        f"{LESSON_SUBMIT_PATH}/{lesson_uuid}/manual",
         token,
         bootdev_cli_config,
         http_method="POST",
@@ -122,7 +123,7 @@ def submit_multiple_choice(
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
     return _make_bdd_req(
-        f"{LESSON_PATH}/{lesson_uuid}/multiple_choice",
+        f"{LESSON_SUBMIT_PATH}/{lesson_uuid}/multiple_choice",
         token,
         bootdev_cli_config,
         http_method="POST",
@@ -139,7 +140,7 @@ def submit_code(
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
     return _make_bdd_req(
-        f"{LESSON_PATH}/{lesson_uuid}/code",
+        f"{LESSON_SUBMIT_PATH}/{lesson_uuid}/code",
         token,
         bootdev_cli_config,
         http_method="POST",
@@ -156,7 +157,7 @@ def submit_code_tests(
     bootdev_cli_config: BootdevCliConfig | None = None,
 ):
     return _make_bdd_req(
-        f"{LESSON_PATH}/{lesson_uuid}/code_tests",
+        f"{LESSON_SUBMIT_PATH}/{lesson_uuid}/code_tests",
         token,
         bootdev_cli_config,
         http_method="POST",
