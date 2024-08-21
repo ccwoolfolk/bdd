@@ -72,6 +72,14 @@ After following the dev installation steps:
 pytest
 ```
 
+### Testing a build
+
+```bash
+# (in a venv, most likely)
+python3 -m build
+python3 -m pip install dist/bddcmd-[version].tar.gz
+```
+
 ### Release
 
 ```

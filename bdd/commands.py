@@ -119,7 +119,9 @@ def run_lesson(is_submit: bool = False) -> str | None:
                 case ProgLang.PYTHON:
                     fn: str = "main_test.py" if is_test else "main.py"
                     results = bddsubprocess.run_python(
-                        str(Path(lesson.lesson_dir, fn)), is_submit=is_submit
+                        str(Path(lesson.lesson_dir, fn)),
+                        cwd=str(lesson.lesson_dir),
+                        is_submit=is_submit,
                     )
                 case ProgLang.JAVASCRIPT:
                     # TODO: what is the !!is_test file name?
